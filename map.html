@@ -131,8 +131,10 @@
             })
             .then(function (data) {
               if (data.totalResultsCount > 0) {
-                lat = parseFloat(data.geonames[0].lat);
-                lon = parseFloat(data.geonames[0].lng);
+                lat = d.Latitude;
+                lon = d.Longitude;
+                //lat = parseFloat(data.geonames[0].lat);
+                //lon = parseFloat(data.geonames[0].lng);
                 var marker = L.marker([lat, lon]).addTo(map);
                 marker.bindPopup('<strong>' + d.village + '</strong><br>' + parameter + ': ' + d.value);
               }
