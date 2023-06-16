@@ -137,14 +137,7 @@
         .attr("class", "y-axis")
         .call(yAxis);
 
-      // Draw points
-      var line = d3.line()
-        .xParameter(function(d) { return xParameter(d.xValue); })
-        .yParameter(function(d) { return yParameter(d.yValue); })
-        .curve(d3.curveCardinal);
-      //var points = svg.selectAll(".point")
-        //.data(processedData);
-      
+       
       svg.append("path")
             .datum(data)
             .attr("class", "line")
@@ -208,6 +201,14 @@
         };
       });
     }
+    
+     // Draw line
+      var line = d3.line()
+        .xParameter(function(d) { return xParameter(d.xValue); })
+        .yParameter(function(d) { return yParameter(d.yValue); })
+        .curve(d3.curveCardinal);
+      //var points = svg.selectAll(".point")
+        //.data(processedData);
 
     // Function to get the axis label based on the parameter
     function getAxisLabel(parameter) {
