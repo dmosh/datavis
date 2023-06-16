@@ -138,8 +138,11 @@
         .call(yAxis);
 
       // Draw points
-      var points = svg.selectAll(".point")
-        .data(processedData);
+      var line = d3.line()
+        .x(function(d) { return x(d.xValue); })
+        .y(function(d) { return y(d.yValue); });
+      //var points = svg.selectAll(".point")
+        //.data(processedData);
 
       points.enter()
         .append("circle")
