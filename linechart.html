@@ -140,11 +140,13 @@
       // Draw points
       var line = d3.line()
         .x(function(d) { return x(d.xValue); })
-        .y(function(d) { return y(d.yValue); });
+        .y(function(d) { return y(d.yValue); })
+        .curve(d3.curveCardinal);
       //var points = svg.selectAll(".point")
         //.data(processedData);
+      
 
-      line.enter()
+      /*line.enter()
         .append("circle")
         .attr("class", "point")
         .merge(points)
@@ -168,7 +170,7 @@
           hidePointValue();
         });
 
-      points.exit().remove();
+      points.exit().remove();*/
 
       // Update chart title
       var chartTitle = currentXParameter + " vs " + currentYParameter;
