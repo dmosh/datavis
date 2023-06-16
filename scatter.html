@@ -12,7 +12,6 @@
     body {
       font-family: 'Comfortaa', cursive;
       background: linear-gradient(130deg, #ccc 5%, #c8c8c8 80%);
-      /*font-family: Arial, sans-serif;*/
       background-color: #f2f2f2;
       margin: 0;
       padding: 50px 10px;
@@ -22,10 +21,37 @@
       flex-direction: column;
       cursor: pointer;
     }
+
     /* Add your custom CSS styles here */
     #x-axis-label-container {
       text-align: center;
-      margin-top: 2px; /* Adjust the margin-top value as needed */
+      margin-top: 2px;
+    }
+
+    .tooltip {
+      position: absolute;
+      pointer-events: none;
+      font-size: 14px;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 5px;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+
+    .point {
+      transition: opacity 0.3s ease-in-out;
+    }
+
+    .point:hover {
+      opacity: 0.7;
+      stroke: black;
+      stroke-width: 1;
+    }
+
+    .point:hover .tooltip {
+      opacity: 1;
     }
   </style>
 </head>
@@ -72,7 +98,6 @@
     <div id="chart-container">
       <h2 id="chart-title"></h2>
       <div id="scatter-plot"></div>
-      <!-- Add a new <div> element to hold the x-axis label -->
       <div id="x-axis-label-container"></div>
     </div>
   </div>
@@ -149,20 +174,18 @@
         .attr("cy", function (d) { return yScale(d.yValue); })
         .attr("r", 5)
         .attr("fill", function (d) { return d.color; })
-        .property("data-point", function (d) { return d; }) // Assign processed data as property of the circles
-        .on("mouseover", function () {
-          var d = d3.select(this).property("data-point"); // Access the processed data from the circle
+        .on("mouseover", function (event, d) {
           d3.select(this)
             .attr("opacity", 0.7)
             .attr("stroke", "black")
             .attr("stroke-width", 1);
-          showPointValue(d);
+          showTooltip(event, d);
         })
         .on("mouseout", function () {
           d3.select(this)
             .attr("opacity", 1)
             .attr("stroke", "none");
-          hidePointValue();
+          hideTooltip();
         });
 
       points.exit().remove();
@@ -176,8 +199,7 @@
       d3.select("#x-axis-label-container").text(xAxisLabel);
 
       // Update y-axis label
-       // Update y-axis label
-       var yAxisLabel = getAxisLabel(yParameter);
+      var yAxisLabel = getAxisLabel(yParameter);
       svg.append("text")
         .attr("class", "y-axis-label")
         .attr("transform", "rotate(-90)")
@@ -201,8 +223,6 @@
 
     // Function to get the axis label based on the parameter
     function getAxisLabel(parameter) {
-      // Return the axis label based on the parameter
-      // Modify as needed
       switch (parameter) {
         case "ecoli":
           return "Ecoli";
@@ -230,20 +250,24 @@
         return "gray";
     }
 
-    // Function to show the point value on hover
-    function showPointValue(d) {
-      var pointValue = "(" + d.xValue.toFixed(2) + ", " + d.yValue.toFixed(2) + ")";
-      d3.select("#scatter-plot")
-        .append("text")
-        .attr("id", "point-value")
-        .attr("x", 10)
-        .attr("y", 20)
-        .text(pointValue);
+    // Function to show the tooltip on hover
+    function showTooltip(event, d) {
+      var tooltip = d3.select("#scatter-plot")
+        .append("div")
+        .attr("class", "tooltip")
+        .style("position", "absolute")
+        .style("left", event.pageX + 10 + "px")
+        .style("top", event.pageY - 10 + "px");
+
+      var xValue = d.xValue.toFixed(2);
+      var yValue = d.yValue.toFixed(2);
+
+      tooltip.html("(" + xValue + ", " + yValue + ")");
     }
 
-    // Function to hide the point value
-    function hidePointValue() {
-      d3.select("#point-value").remove();
+    // Function to hide the tooltip
+    function hideTooltip() {
+      d3.select(".tooltip").remove();
     }
   </script>
 </body>
