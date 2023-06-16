@@ -6,70 +6,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
-    @import url(https://fonts.googleapis.com/css2?family=Comfortaa:wght@300);
+  @import url(https://fonts.googleapis.com/css2?family=Comfortaa:wght@300);
 
-    body {
-      font-family: 'Comfortaa', cursive;
-      background: linear-gradient(130deg, #ccc 5%, #c8c8c8 80%);
-      background-color: #f2f2f2;
-      margin: 0;
-      padding: 50px 10px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
+  body {
+    font-family: 'Comfortaa', cursive;
+    background: linear-gradient(130deg, #ccc 5%, #c8c8c8 80%);
+    background-color: #f2f2f2;
+    margin: 0;
+    padding: 50px 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
 
-    .container {
-      margin-top: 20px;
-    }
+  .container {
+    margin-top: 20px;
+  }
 
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
 
-    #chart-container {
-      margin-top: 30px;
-    }
+  #chart-container {
+    margin-top: 30px;
+  }
 
-    #parameter-select {
-      margin-bottom: 20px;
-    }
+  #parameter-select {
+    margin-bottom: 20px;
+  }
 
-    .bar {
-      cursor: pointer;
-      transition: fill 0.3s;
-    }
+  .bar {
+    cursor: pointer;
+    transition: fill 0.3s;
+  }
 
-    .bar:hover {
-      fill: orange;
-    }
+  .bar:hover {
+    fill: orange;
+  }
 
-    .target-line {
-      stroke-dasharray: 3,3;
-      stroke: red;
-      stroke-width: 1;
-    }
+  .target-line {
+    stroke-dasharray: 3,3;
+    stroke: red;
+    stroke-width: 1;
+  }
 
-    .y-axis-label {
-      font-weight: bold;
-      text-anchor: middle;
-    }
+  .y-axis-label {
+    font-weight: bold;
+    text-anchor: middle;
+  }
 
-    .tooltip {
-      position: absolute;
-      padding: 10px;
-      background-color: white;
-      border: 1px solid #ccc;
-      pointer-events: none;
-    }
+  .tooltip {
+    position: absolute;
+    padding: 10px;
+    background-color: white;
+    border: 1px solid #ccc;
+  }
 
-    .tooltip div {
-      margin-bottom: 5px;
-    }
+  .tooltip div {
+    margin-bottom: 5px;
+  }
+</style>
 
-  </style>
 </head>
 <body>
   <div class="container">
