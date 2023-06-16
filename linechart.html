@@ -143,11 +143,11 @@
         .attr("class", "y-axis")
         .call(yAxis); 
       
-       svg.append("path")
-      .attr("fill", "none")
-      .attr("stroke", "steelblue")
-      .attr("stroke-width", 1.5)
-      .attr("d", line(processedData));
+      svg.append("path")
+        .attr("fill", "none")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 1.5)
+        .attr("d", line(processedData));
 
       /*line.enter()
         .append("circle")
