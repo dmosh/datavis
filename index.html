@@ -56,6 +56,18 @@
       font-weight: bold;
       text-anchor: middle;
     }
+    .tooltip {
+        position: absolute;
+        padding: 10px;
+        background-color: white;
+        border: 1px solid #ccc;
+        pointer-events: none;
+      }
+
+     .tooltip div {
+        margin-bottom: 5px;
+      }
+
   </style>
 </head>
 <body>
@@ -73,6 +85,12 @@
     <div id="chart-container">
       <h2 id="chart-title"></h2>
       <div id="bar-chart"></div>
+      <!-- Tooltip -->
+      <div id="tooltip" class="tooltip" style="display: none;">
+        <div><strong>District:</strong> <span id="district"></span></div>
+        <div><strong>Value:</strong> <span id="value"></span></div>
+      </div>
+
     </div>
   </div>
 
@@ -267,6 +285,40 @@
       d3.select("#bar-value")
         .style("display", "none");
     }
+    // Add tooltips
+bars.merge(bars)
+  .attr("x", function(d) { return xScale(d.district); })
+  .attr("y", function(d) { return yScale(d.value); })
+  .attr("width", xScale.bandwidth())
+  .attr("height", function(d) { return height - yScale(d.value); })
+  .attr("fill", function(d) { return d.color; })
+  .on("mouseover", function(d) {
+    d3.select(this)
+      .attr("fill", "orange");
+    showBarValue(d);
+    showTooltip(d);
+  })
+  .on("mouseout", function(d) {
+    d3.select(this)
+      .attr("fill", function(d) { return d.color; });
+    hideBarValue();
+    hideTooltip();
+  });
+
+// Function to show tooltip on hover
+function showTooltip(data) {
+  var tooltip = d3.select("#tooltip");
+  tooltip.select("#district").text(data.district);
+  tooltip.select("#value").text(data.value);
+  tooltip.style("display", "block");
+}
+
+// Function to hide tooltip
+function hideTooltip() {
+  d3.select("#tooltip")
+    .style("display", "none");
+}
+
   </script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
