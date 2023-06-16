@@ -122,36 +122,37 @@
 
       // Set up chart options
       var chartOptions = {
-        chart: {
-          type: 'radar',
-          height: 400
-        },
-        series: chartData.series,
-        labels: chartData.labels,
-        dataLabels: {
-          enabled: true,
-          style: {
-            fontSize: '12px',
-            fontFamily: 'Comfortaa, cursive'
-          }
-        },
-        plotOptions: {
-          radar: {
-            dataLabels: {
-              offsetY: 5,
-              formatter: function(value, { seriesIndex, dataPointIndex }) {
-                if (value === Math.max(...chartData.series[seriesIndex].data))
-                  return value;
-                return '';
-              }
-            },
-            polygons: {
-              fill: {
-                colors: ['#2979ff', '#2979ff']
-              }
-            }
-          }
-        }
+       chart: {
+    type: 'radar',
+    height: 400
+  },
+  series: chartData.series,
+  labels: chartData.labels,
+  dataLabels: {
+    enabled: true,
+    style: {
+      fontSize: '12px', // Adjust the font size as needed
+      fontWeight: 'bold',
+      colors: ['#000000'] // Adjust the label color as needed
+    }
+  },
+  plotOptions: {
+    radar: {
+      polygons: {
+        strokeColors: ['#000000'], // Adjust the polygon border color as needed
+        strokeWidth: 1 // Adjust the polygon border width as needed
+      }
+    }
+  },
+  xaxis: {
+    labels: {
+      show: true,
+      trim: false,
+      style: {
+        fontSize: '12px' // Adjust the font size as needed
+      }
+    }
+  }
       };
 
       // Remove existing chart
