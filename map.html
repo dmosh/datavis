@@ -170,10 +170,22 @@
           const latitude = parseFloat(d.Latitude);
           const longitude = parseFloat(d.Longitude);
           const value = +d[parameter];
+
+          if (isNaN(latitude) || isNaN(longitude)) {
+            // Skip data points with invalid coordinates
+            return null;
+          }
+
           return { village, latitude, longitude, value };
         })
-      );
+      ).then(function (processedData) {
+        // Filter out null values
+        return processedData.filter(function (d) {
+          return d !== null;
+        });
+      });
     }
+
 
   </script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
