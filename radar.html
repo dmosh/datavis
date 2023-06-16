@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Water Quality Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    @import url(https://fonts.googleapis.com/css2?family=Comfortaa:wght@300);
+
+    body {
+      font-family: 'Comfortaa', cursive;
+      background: linear-gradient(130deg, #ccc 5%, #c8c8c8 80%);
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 50px 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .container {
+      margin-top: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #chart-container {
+      margin-top: 30px;
+    }
+
+    #parameter-select {
+      margin-bottom: 20px;
+    }
+
+    .chart {
+      width: 600px;
+      height: 400px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="index.html">Bar Chart</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="map.html">Map</a>
+        </li>
+        <li class="nav-item active">
+          <a class="nav-link" href="scatter.html">Scatter Plot</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="container">
+    <h1>Water Quality Dashboard</h1>
+    <div>
+      <label for="parameter-select">Select Parameter:</label>
+      <select id="parameter-select" onchange="updateChart()">
+        <option value="ecoli">Ecoli</option>
+        <option value="turbidity">Turbidity</option>
+        <option value="pH">pH</option>
+        <option value="sulphate">Sulphate</option>
+      </select>
+    </div>
+    <div id="chart-container">
+      <h2 id="chart-title"></h2>
+      <div id="radar-chart" class="chart"></div>
+    </div>
+  </div>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@latest"></script>
+  <script>
+    // Global variables
+    var data;
+    var currentParameter = "ecoli";
+
+    // Load data from data.csv and target.csv
+    d3.csv("data.csv").then(function(dataset) {
+      data = dataset;
+      updateChart();
+    });
+
+    // Function to update the chart based on the selected parameter
+    function updateChart() {
+      var parameter = d3.select("#parameter-select").node().value;
+      currentParameter = parameter;
+
+      // Process the data
+      var processedData = processData(data, parameter);
+
+      // Prepare data for radar chart
+      var chartData = {
+        series: [
+          {
+            name: "Parameter Value",
+            data: processedData.map(function(d) { return d.value; })
+          }
+        ],
+        labels: processedData.map(function(d) { return d.district; })
+      };
+
+      // Set up chart options
+      var chartOptions = {
+        chart: {
+          type: 'radar',
+          height: 400
+        },
+        series: chartData.series,
+        labels: chartData.labels,
+        dataLabels: {
+          enabled: true
+        }
+      };
+
+      // Remove existing chart
+      if (window.chart) {
+        window.chart.destroy();
+      }
+
+      // Create radar chart
+      window.chart = new ApexCharts(document.querySelector("#radar-chart"), chartOptions);
+      window.chart.render();
+
+      // Update chart title
+      var chartTitle = getChartTitle(currentParameter);
+      d3.select("#chart-title")
+        .text(chartTitle);
+    }
+
+    // Function to process the raw data
+    function processData(data, parameter) {
+      // Process the data here and return an array of objects with district, value, and color properties
+      return data.map(function(d) {
+        return {
+          district: d.District,
+          value: +d[parameter]
+        };
+      });
+    }
+
+    // Function to get the chart title based on the parameter
+    function getChartTitle(parameter) {
+      // Return the chart title based on the parameter
+      // Modify as needed
+      switch (parameter) {
+        case "ecoli":
+          return "Ecoli Concentration by District";
+        case "turbidity":
+          return "Turbidity by District";
+        case "sulphate":
+          return "Sulphate Concentration by District";
+        case "pH":
+          return "pH Level by District";
+        default:
+          return "";
+      }
+    }
+  </script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
