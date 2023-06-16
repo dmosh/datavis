@@ -113,6 +113,11 @@
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      
+      // Declare the line generator.
+      const line = d3.line()
+        .x(d => x(d.xValue))
+        .y(d => y(d.yValue));
 
       // Set up the x-scale
       var xScale = d3.scaleLinear()
@@ -135,14 +140,7 @@
       var yAxis = d3.axisLeft(yScale);
       svg.append("g")
         .attr("class", "y-axis")
-        .call(yAxis);
-
-       
-      svg.append("path")
-            .datum(data)
-            .attr("class", "line")
-            .attr("d", line);
-      
+        .call(yAxis);  
 
       /*line.enter()
         .append("circle")
@@ -202,13 +200,6 @@
       });
     }
     
-     // Draw line
-      var line = d3.line()
-        .xParameter(function(d) { return xParameter(d.xValue); })
-        .yParameter(function(d) { return yParameter(d.yValue); })
-        .curve(d3.curveCardinal);
-      //var points = svg.selectAll(".point")
-        //.data(processedData);
 
     // Function to get the axis label based on the parameter
     function getAxisLabel(parameter) {
