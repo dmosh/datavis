@@ -140,7 +140,13 @@
       var yAxis = d3.axisLeft(yScale);
       svg.append("g")
         .attr("class", "y-axis")
-        .call(yAxis);  
+        .call(yAxis); 
+      
+       svg.append("path")
+      .attr("fill", "none")
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 1.5)
+      .attr("d", line(aapl));
 
       /*line.enter()
         .append("circle")
