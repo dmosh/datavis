@@ -116,8 +116,8 @@
       
       // Declare the line generator.
       const line = d3.line()
-        .x(d => x(d.xValue))
-        .y(d => y(d.yValue));
+        .xParameter(d => x(d.xValue))
+        .yParameter(d => y(d.yValue));
 
       // Set up the x-scale
       var xScale = d3.scaleLinear()
