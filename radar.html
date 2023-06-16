@@ -170,16 +170,17 @@
     }
 
     // Function to process the raw data
+    // Function to process the raw data
     function processData(data, parameter) {
       // Process the data here and return an array of objects with district, value, and color properties
       return data.map(function(d) {
         return {
-          district: d.District,
+          district: d.District.substring(0, 3), // Truncate label to the first 10 characters
           value: +d[parameter]
         };
       });
     }
-
+    
     // Function to get the chart title based on the parameter
     function getChartTitle(parameter) {
       // Return the chart title based on the parameter
