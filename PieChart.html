@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+	<a href="file:///C:/Users/chrisostom.opio/Desktop/Visualization%20Exam/Horizontal_Bar_Graph.html">Previous Visual</a>
+	<a href="file:///C:/Users/chrisostom.opio/Desktop/Visualization%20Exam/Dounut%20(2).html">Next Visual</a>
+</head>
+<body>
+    <h2>Water Contaminants Distribution</h2>
+    <svg width="500" height="400"></svg> <!--Step 2-->
+    <script>
+        
+        // Step 3
+        var svg = d3.select("svg"),
+            width = svg.attr("width"),
+            height = svg.attr("height"),
+            radius = 200;
+
+        // Step 1        
+        var data = [{name:"Turbidity", share: 2.14},
+		            {name:"Ecoli", share: 13.37}, 
+                    {name:"Nitrate", share: 9.63},
+                    {name:"Iron", share: 3.74},
+					{name:"Normal",share:71.12}];
+        
+        var g = svg.append("g")
+                   .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+        // Step 4
+        var ordScale = d3.scaleOrdinal()
+                        	.domain(data)
+                        	.range(['#729bfa','#eaeb94','#94ebc4','#d3e0ea','#fa7f72']);
+
+        // Step 5
+        var pie = d3.pie().value(function(d) { 
+                return d.share; 
+            });
+
+        var arc = g.selectAll("arc")
+                   .data(pie(data))
+                   .enter();
+
+        // Step 6
+        var path = d3.arc()
+                     .outerRadius(radius)
+                     .innerRadius(0);
+
+        arc.append("path")
+           .attr("d", path)
+           .attr("fill", function(d) { return ordScale(d.data.name); });
+
+        // Step 7
+        var label = d3.arc()
+                      .outerRadius(radius)
+                      .innerRadius(0);
+            
+        arc.append("text")
+           .attr("transform", function(d) { 
+                    return "translate(" + label.centroid(d) + ")"; 
+            })
+           .text(function(d) { return d.data.name; })
+           .style("font-family", "arial")
+           .style("font-size", 14);
+            
+
+            
+    </script>
+</body>
+</html>
