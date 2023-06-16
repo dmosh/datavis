@@ -164,14 +164,17 @@
     // Function to process the raw data
     function processData(data, parameter) {
       // Process the data here and return the processed data as an array of objects
-      return Promise.all(data.map(async function (d) {
-        const village = d.village;
-        const latitude = parseFloat(d.latitude);
-        const longitude = parseFloat(d.longitude);
-        const value = +d[parameter];
-        return { village, latitude, longitude, value };
-      }));
+      return Promise.all(
+        data.map(async function (d) {
+          const village = d.village;
+          const latitude = parseFloat(d.Latitude);
+          const longitude = parseFloat(d.Longitude);
+          const value = +d[parameter];
+          return { village, latitude, longitude, value };
+        })
+      );
     }
+
   </script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
