@@ -46,20 +46,25 @@
   <script>
     d3.csv("data.csv").then(function(data) {
       // Data preprocessing
+      // Data preprocessing
       const nestedData = d3.group(data, d => d.District, d => d.Parameter);
       const root = {
         name: "Uganda",
         children: Array.from(nestedData, ([district, params]) => ({
           name: district,
-          children: Array.from(params, ([param, values]) => ({
-            name: param,
-            value: +values[0].ecoli,
-            ph: +values[0].ph,
-            conductivity: +values[0].conductivity,
-            turbidity: +values[0].turbidity
-          }))
+          children: Array.from(params, ([param, values]) => {
+            const entry = values[0]; // Retrieve the first data entry for the parameter
+            return {
+              name: param,
+              ecoli: +entry.ecoli,
+              ph: +entry.pH,
+              conductivity: +entry["Electrical Conductivity"],
+              turbidity: +entry.turbidity
+            };
+          })
         }))
       };
+
 
       // Chart dimensions
       const width = 800;
@@ -118,11 +123,13 @@
         .text(function(d) {
           return (
             "Parameter: " + d.data.name +
-            "\nEcoli: " + d.data.ecoli +
-            "\npH: " + d.data.ph +
-            "\nConductivity: " + d.data.conductivity +
-            "\nTurbidity: " + d.data.turbidity
+            "\nEcoli: " + (isNaN(d.data.ecoli) ? "N/A" : d.data.ecoli) +
+            "\npH: " + (isNaN(d.data.ph) ? "N/A" : d.data.ph) +
+            "\nConductivity: " + (isNaN(d.data.conductivity) ? "N/A" : d.data.conductivity) +
+            "\nTurbidity: " + (isNaN(d.data.turbidity) ? "N/A" : d.data.turbidity)
           );
+        });
+
   });
 
     });
