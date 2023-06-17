@@ -17,14 +17,6 @@
       align-items: center;
       flex-direction: column;
     }
-    
-    #chart-container {
-      margin-top: 30px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
 
     .container {
       margin-top: 20px;
@@ -37,39 +29,17 @@
 
     .chart {
       width: 1000px;
-      height: 600px;
+      height: 800px; /* Increase the height to accommodate the treemap */
       margin: 0 auto;
     }
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link" href="index.html">Bar Chart</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="map.html">Map</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="scatter.html">Scatter Plot</a>
-        </li>
-        <li class="nav-item active">
-          <a class="nav-link" href="treemap.html">Treemap</a>
-        </li>
-      </ul>
-    </div>
-  </nav>
   <div class="container">
     <h1>Water Quality Dashboard</h1>
     <div id="chart-container">
       <h2 id="chart-title"></h2>
-      <div id="chart" class="chart"></div>
+      <div id="chart"></div>
     </div>
   </div>
 
@@ -77,18 +47,26 @@
     d3.csv("data.csv").then(function(data) {
       // Data preprocessing
       const root = {
-        name: "root",
-        children: data.map(function(d) {
-          return {
-            name: d.village,
-            district: d.District,
-            value: +d.ecoli
-          };
-        })
+        name: "Uganda",
+        children: d3.nest()
+          .key(function(d) { return d.District; })
+          .key(function(d) { return d.Parameter; })
+          .entries(data)
+          .map(function(d) {
+            return {
+              name: d.key,
+              children: d.values.map(function(v) {
+                return {
+                  name: v.key,
+                  value: +v.ecoli
+                };
+              })
+            };
+          })
       };
 
       // Chart dimensions
-      const width = 1000;
+      const width = 800;
       const height = 600;
 
       // Create a D3.js treemap layout
@@ -100,8 +78,12 @@
       const rootHierarchy = d3.hierarchy(root)
         .sum(function(d) {
           return d.value;
+        })
+        .sort(function(a, b) {
+          return b.value - a.value;
         });
-      const tree = treemap(rootHierarchy);
+
+      treemap(rootHierarchy);
 
       // Create the SVG container
       const svg = d3.select("#chart")
@@ -109,17 +91,16 @@
         .attr("width", width)
         .attr("height", height);
 
-      // Create the treemap cells
-      const cell = svg.selectAll("g")
-        .data(tree.leaves())
+      // Create the treemap nodes
+      const node = svg.selectAll("g")
+        .data(rootHierarchy.leaves())
         .enter()
         .append("g")
         .attr("transform", function(d) {
           return "translate(" + d.x0 + "," + d.y0 + ")";
-        })
-        .on("click", toggleCellVisibility); // Add click event handler
+        });
 
-      cell.append("rect")
+      node.append("rect")
         .attr("width", function(d) {
           return d.x1 - d.x0;
         })
@@ -129,7 +110,7 @@
         .attr("fill", "steelblue")
         .attr("stroke", "white");
 
-      cell.append("text")
+      node.append("text")
         .attr("x", 5)
         .attr("y", 15)
         .text(function(d) {
@@ -137,19 +118,10 @@
         })
         .attr("fill", "white");
 
-      cell.append("title")
+      node.append("title")
         .text(function(d) {
-          return d.data.name + "\nDistrict: " + d.data.district + "\nEcoli: " + d.data.value;
+          return d.data.name + "\nEcoli: " + d.value;
         });
-
-      // Function to toggle the visibility of a cell
-      function toggleCellVisibility(d) {
-        d3.select(this) // 'this' refers to the clicked cell
-          .select("rect")
-          .attr("fill-opacity", function() {
-            return d3.select(this).attr("fill-opacity") === "0" ? "1" : "0";
-          });
-      }
     });
   </script>
 </body>
