@@ -116,10 +116,9 @@
       .attr("x", 5)
       .attr("y", 15)
       .text(function(d) {
-        return d.data.children[0].name;
+        return d.data.name;
       })
       .attr("fill", "white");
-
 
       node.append("title")
         .text(function(d) {
