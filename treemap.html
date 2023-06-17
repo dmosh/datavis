@@ -35,169 +35,6 @@
       margin-bottom: 20px;
     }
 
-    #chart-container {
-      margin-top: 30px;
-    }
-
-    #parameter-select {
-      margin-bottom: 20px;
-    }
-
-    .chart {
-      width: 1000px;
-      height: 800px; /* Increase the height to accommodate the treemap */
-      margin: 0 auto;
-    }
-  </style>
-</head>
-<body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link" href="index.html">Bar Chart</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="map.html">Map</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="scatter.html">Scatter Plot</a>
-        </li>
-        <li class="nav-item active">
-          <a class="nav-link" href="treemap.html">Treemap</a>
-        </li>
-      </ul>
-    </div>
-  </nav>
-  <div class="container">
-    <h1>Water Quality Dashboard</h1>
-    <div id="chart-container">
-      <h2 id="chart-title"></h2>
-      <div id="chart"></div>
-    </div>
-  </div>
- 
-
-  <script>
-    d3.csv("data.csv").then(function(data) {
-      // Data preprocessing
-      const root = {
-        name: "root",
-        children: data.map(function(d) {
-          return {
-            name: d.village,
-            district: d.District,
-            value: +d.ecoli
-          };
-        })
-      };
-
-      // Chart dimensions
-      const width = 800;
-      const height = 600;
-
-      // Create a D3.js treemap layout
-      const treemap = d3.treemap()
-        .size([width, height])
-        .padding(1);
-
-      // Compute the treemap layout
-      const rootHierarchy = d3.hierarchy(root)
-        .sum(function(d) {
-          return d.value;
-        });
-      const tree = treemap(rootHierarchy);
-
-      // Create the SVG container
-      const svg = d3.select("#chart")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height);
-
-      // Create the treemap cells
-      const cell = svg.selectAll("g")
-        .data(tree.leaves())
-        .enter()
-        .append("g")
-        .attr("transform", function(d) {
-          return "translate(" + d.x0 + "," + d.y0 + ")";
-        });
-
-      cell.append("rect")
-        .attr("width", function(d) {
-          return d.x1 - d.x0;
-        })
-        .attr("height", function(d) {
-          return d.y1 - d.y0;
-        })
-        .attr("fill", "steelblue")
-        .attr("stroke", "white");
-
-      cell.append("text")
-        .attr("x", 5)
-        .attr("y", 15)
-        .text(function(d) {
-          return d.data.name;
-        })
-        .attr("fill", "white");
-
-      cell.append("title")
-        .text(function(d) {
-          return d.data.name + "\nDistrict: " + d.data.district + "\nEcoli: " + d.data.value;
-        });
-    });
-  </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html>
-<head>
-  <title>D3.js Treemap</title>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <style>
-    @import url(https://fonts.googleapis.com/css2?family=Comfortaa:wght@300);
-
-    body {
-      font-family: 'Comfortaa', cursive;
-      background: linear-gradient(130deg, #ccc 5%, #c8c8c8 80%);
-      background-color: #f2f2f2;
-      margin: 0;
-      padding: 50px 10px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
-    
-    #chart-container {
-      margin-top: 30px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
-
-    .container {
-      margin-top: 20px;
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    #chart-container {
-      margin-top: 30px;
-    }
-
-    #parameter-select {
-      margin-bottom: 20px;
-    }
-
     .chart {
       width: 1000px;
       height: 600px;
@@ -232,11 +69,9 @@
     <h1>Water Quality Dashboard</h1>
     <div id="chart-container">
       <h2 id="chart-title"></h2>
-       <div id="chart"></div>
-      <div id="treemap-chart" class="chart"></div>
+      <div id="chart" class="chart"></div>
     </div>
   </div>
- 
 
   <script>
     d3.csv("data.csv").then(function(data) {
@@ -253,7 +88,7 @@
       };
 
       // Chart dimensions
-      const width = 800;
+      const width = 1000;
       const height = 600;
 
       // Create a D3.js treemap layout
