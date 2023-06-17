@@ -66,13 +66,13 @@
         const transition = svg.transition()
           .duration(duration)
           .attr("viewBox", [-margin.left, left.x - margin.top, width, height])
-          .tween("resize", window.ResizeObserver ? null : () => () => svg.dispatch("toggle"));
+          .tween("resize", () => () => svg.dispatch("toggle"));
 
         const node = gNode.selectAll("g")
           .data(root.descendants(), d => d.id);
 
         const nodeEnter = node.enter().append("g")
-          .attr("transform", d => `translate(${source.y0},${source.x0})`)
+          .attr("transform", d => `translate(<span class="math-inline">\{source\.y0\},</span>{source.x0})`)
           .attr("fill-opacity", 0)
           .attr("stroke-opacity", 0)
           .on("click", (event, d) => {
@@ -89,7 +89,7 @@
           .attr("dy", ".31em")
           .attr("x", d => d._children ? -6 : 6)
           .attr("text-anchor", d => d._children ? "end" : "start")
-          .text(d => d.data.name)
+          .text(d => d.data.name
           .clone(true).lower()
           .attr("stroke-linejoin", "round")
           .attr("stroke-width", 3)
