@@ -23,21 +23,26 @@
     const tree = d3.tree().nodeSize([dx, dy]);
 
     d3.csv("data.csv").then(data => {
-      console.log(data); // Add this line
+      //console.log(data); // Add this line
+      // Data preprocessing
       const nestedData = d3.group(data, d => d.District);
-      const rootData = {
+      console.log("Nested Data:", nestedData); // Check if the data is grouped correctly
+      
+      const root = {
         name: "Uganda",
-        children: Array.from(nestedData, ([district, villageData]) => ({
+        children: Array.from(nestedData, ([district, values]) => ({
           name: district,
-          children: Array.from(d3.group(villageData, d => d.Village), ([village, parameterData]) => ({
+          children: Array.from(d3.group(values, d => d.Village), ([village, villageValues]) => ({
             name: village,
-            children: parameterData.map(entry => ({
+            children: villageValues.map(entry => ({
               name: entry.Parameter,
               ecoli: +entry.ecoli
             }))
           }))
         }))
       };
+      
+      console.log("Root:", root);
 
       const svg = d3.create("svg")
         .attr("viewBox", [-margin.left, -margin.top, width, dx])
