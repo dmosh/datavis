@@ -16,8 +16,8 @@
     const height = container.clientHeight;
 
     const margin = { top: 20, right: 90, bottom: 30, left: 90 };
-    const dx = 10;
-    const dy = width / 6;
+    const dx = 30;
+    const dy = width / 8; // Adjust this value as needed
     const diagonal = d3.linkHorizontal().x(d => d.y).y(d => d.x);
 
     const tree = d3.tree().nodeSize([dx, dy]);
