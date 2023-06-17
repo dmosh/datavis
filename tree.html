@@ -23,7 +23,20 @@
     const tree = d3.tree().nodeSize([dx, dy]);
 
     d3.csv("data.csv").then(data => {
-      const districts = d3.group(data, d => d.District);
+      const nestedData = d3.group(data, d => d.District);
+      const rootData = {
+        name: "Uganda",
+        children: Array.from(nestedData, ([district, villageData]) => ({
+          name: district,
+          children: Array.from(d3.group(villageData, d => d.Village), ([village, parameterData]) => ({
+            name: village,
+            children: parameterData.map(entry => ({
+              name: entry.Parameter,
+              ecoli: +entry.ecoli
+            }))
+          }))
+        }))
+      };
 
       const svg = d3.create("svg")
         .attr("viewBox", [-margin.left, -margin.top, width, dx])
@@ -66,13 +79,13 @@
         const transition = svg.transition()
           .duration(duration)
           .attr("viewBox", [-margin.left, left.x - margin.top, width, height])
-          .tween("resize", () => () => svg.dispatch("toggle"));
+          .tween("resize", window.ResizeObserver ? null : () => () => svg.dispatch("toggle"));
 
         const node = gNode.selectAll("g")
           .data(root.descendants(), d => d.id);
 
         const nodeEnter = node.enter().append("g")
-          .attr("transform", d => `translate(<span class="math-inline">\{source\.y0\},</span>{source.x0})`)
+          .attr("transform", d => `translate(${source.y0},${source.x0})`)
           .attr("fill-opacity", 0)
           .attr("stroke-opacity", 0)
           .on("click", (event, d) => {
@@ -89,7 +102,7 @@
           .attr("dy", ".31em")
           .attr("x", d => d._children ? -6 : 6)
           .attr("text-anchor", d => d._children ? "end" : "start")
-          .text(d => d.data.name
+          .text(d => d.data.name)
           .clone(true).lower()
           .attr("stroke-linejoin", "round")
           .attr("stroke-width", 3)
@@ -129,15 +142,13 @@
         });
       }
 
-      for (const [district, districtData] of districts) {
-        const districtContainer = svg.append("g")
-          .attr("transform", `translate(${width / 2},${height / 2})`);
+      const districtContainer = svg.append("g")
+        .attr("transform", `translate(${width / 2},${height / 2})`);
 
-        update({ x: 0, y: 0, x0: 0, y0: 0 }, districtData);
+      update({ x: 0, y: 0, x0: 0, y0: 0 }, rootData);
 
-        districtContainer.append(() => gNode.node().cloneNode(true));
-        districtContainer.append(() => gLink.node().cloneNode(true));
-      }
+      districtContainer.append(() => gNode.node().cloneNode(true));
+      districtContainer.append(() => gLink.node().cloneNode(true));
 
       container.appendChild(svg.node());
     });
