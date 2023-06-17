@@ -23,6 +23,7 @@
     const tree = d3.tree().nodeSize([dx, dy]);
 
     d3.csv("data.csv").then(data => {
+      console.log(data); // Add this line
       const nestedData = d3.group(data, d => d.District);
       const rootData = {
         name: "Uganda",
