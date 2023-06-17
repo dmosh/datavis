@@ -55,7 +55,7 @@
         name: "Uganda",
         children: Array.from(nestedData, ([district, values]) => ({
           name: district,
-          children: values.map(entry => ({
+          children: Array.from(values, entry => ({
             name: entry.Parameter,
             ecoli: +entry.ecoli,
             ph: +entry.pH,
@@ -64,6 +64,7 @@
           }))
         }))
       };
+
 
   console.log(root);
 
