@@ -113,12 +113,13 @@
         .attr("stroke", "white");
 
       node.append("text")
-        .attr("x", 5)
-        .attr("y", 15)
-        .text(function(d) {
-          return d.data.name;
-        })
-        .attr("fill", "white");
+      .attr("x", 5)
+      .attr("y", 15)
+      .text(function(d) {
+        return d.data.children[0].name;
+      })
+      .attr("fill", "white");
+
 
       node.append("title")
         .text(function(d) {
