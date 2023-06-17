@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Treemap</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    #chart {
+      width: 800px;
+      height: 600px;
+    }
+  </style>
+</head>
+<body>
+  <div id="chart"></div>
+
+  <script>
+    d3.csv("data.csv").then(function(data) {
+      // Data preprocessing
+      const root = {
+        name: "root",
+        children: data.map(function(d) {
+          return {
+            name: d.village,
+            district: d.District,
+            value: +d.ecoli
+          };
+        })
+      };
+
+      // Chart dimensions
+      const width = 800;
+      const height = 600;
+
+      // Create a D3.js treemap layout
+      const treemap = d3.treemap()
+        .size([width, height])
+        .padding(1);
+
+      // Compute the treemap layout
+      const rootHierarchy = d3.hierarchy(root)
+        .sum(function(d) {
+          return d.value;
+        });
+      const tree = treemap(rootHierarchy);
+
+      // Create the SVG container
+      const svg = d3.select("#chart")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+      // Create the treemap cells
+      const cell = svg.selectAll("g")
+        .data(tree.leaves())
+        .enter()
+        .append("g")
+        .attr("transform", function(d) {
+          return "translate(" + d.x0 + "," + d.y0 + ")";
+        });
+
+      cell.append("rect")
+        .attr("width", function(d) {
+          return d.x1 - d.x0;
+        })
+        .attr("height", function(d) {
+          return d.y1 - d.y0;
+        })
+        .attr("fill", "steelblue")
+        .attr("stroke", "white");
+
+      cell.append("text")
+        .attr("x", 5)
+        .attr("y", 15)
+        .text(function(d) {
+          return d.data.name;
+        })
+        .attr("fill", "white");
+
+      cell.append("title")
+        .text(function(d) {
+          return d.data.name + "\nDistrict: " + d.data.district + "\nE. coli: " + d.data.value;
+        });
+    });
+  </script>
+</body>
+</html>
