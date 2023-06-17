@@ -116,7 +116,8 @@
         .append("g")
         .attr("transform", function(d) {
           return "translate(" + d.x0 + "," + d.y0 + ")";
-        });
+        })
+        .on("click", toggleCellVisibility); // Add click event handler
 
       cell.append("rect")
         .attr("width", function(d) {
@@ -140,6 +141,15 @@
         .text(function(d) {
           return d.data.name + "\nDistrict: " + d.data.district + "\nEcoli: " + d.data.value;
         });
+
+      // Function to toggle the visibility of a cell
+      function toggleCellVisibility(d) {
+        d3.select(this) // 'this' refers to the clicked cell
+          .select("rect")
+          .attr("fill-opacity", function() {
+            return d3.select(this).attr("fill-opacity") === "0" ? "1" : "0";
+          });
+      }
     });
   </script>
 </body>
