@@ -80,7 +80,7 @@
       // Compute the treemap layout
       const rootHierarchy = d3.hierarchy(root)
         .sum(function(d) {
-          return d.value;
+          return d.ecoli + d.ph + d.conductivity + d.turbidity;
         })
         .sort(function(a, b) {
           return b.value - a.value;
