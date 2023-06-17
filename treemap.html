@@ -100,6 +100,8 @@
         .append("g")
         .attr("transform", "translate(0,0)");
 
+      // Define an array of colors for districts
+      const districtColors = d3.scaleOrdinal(d3.schemeCategory10);
 
       // Create the treemap nodes
       const node = svg.selectAll("g")
@@ -117,17 +119,18 @@
         .attr("height", function(d) {
           return d.y1 - d.y0;
         })
-        .attr("fill", "steelblue")
+        .attr("fill", function(d) {
+          return districtColors(d.parent.data.name); // Assign a color based on district name
+        })
         .attr("stroke", "white");
 
       node.append("text")
-      .attr("x", 5)
-      .attr("y", 15)
-      .text(function(d) {
-        return d.parent.data.name.substring(0, 3); // Retrieve the district name from the parent node
-      })
-
-      .attr("fill", "white");
+        .attr("x", 5)
+        .attr("y", 15)
+        .text(function(d) {
+          return d.parent.data.name.substring(0, 3); // Retrieve the district name from the parent node
+        })
+        .attr("fill", "white");
 
       node.append("title")
         .text(function(d) {
