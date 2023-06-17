@@ -46,18 +46,18 @@
   <script>
     d3.csv("data.csv").then(function(data) {
       // Data preprocessing
-      const nestedData = d3.group(data, d => d.District, d => d.Parameter);
+      const nestedData = d3.group(data, d => d.District);
       const root = {
         name: "Uganda",
-        children: Array.from(nestedData, ([district, params]) => ({
+        children: Array.from(nestedData, ([district, values]) => ({
           name: district,
-          children: Array.from(params, ([param, values]) => {
-            const entry = values[values.length - 1]; // Retrieve the latest data entry for the parameter
-            return {
-              name: param,
-              ecoli: +entry.ecoli,
-            };
-          })
+          children: values.map(entry => ({
+            name: entry.Parameter,
+            ecoli: +entry.ecoli,
+            ph: +entry.pH,
+            conductivity: +entry["Electrical Conductivity"],
+            turbidity: +entry.turbidity
+          }))
         }))
       };
 
@@ -73,10 +73,10 @@
       // Compute the treemap layout
       const rootHierarchy = d3.hierarchy(root)
         .sum(function(d) {
-          return d.ecoli;
+          return d.value;
         })
         .sort(function(a, b) {
-          return b.ecoli - a.ecoli;
+          return b.value - a.value;
         });
 
       treemap(rootHierarchy);
@@ -118,7 +118,10 @@
         .text(function(d) {
           return (
             "Parameter: " + d.data.name +
-            "\nEcoli: " + (isNaN(d.data.ecoli) ? "N/A" : d.data.ecoli)
+            "\nEcoli: " + (isNaN(d.data.ecoli) ? "N/A" : d.data.ecoli) +
+            "\npH: " + (isNaN(d.data.ph) ? "N/A" : d.data.ph) +
+            "\nConductivity: " + (isNaN(d.data.conductivity) ? "N/A" : d.data.conductivity) +
+            "\nTurbidity: " + (isNaN(d.data.turbidity) ? "N/A" : d.data.turbidity)
           );
         });
     });
