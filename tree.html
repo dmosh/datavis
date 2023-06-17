@@ -86,7 +86,7 @@
           .attr("stroke-width", 10);
 
         nodeEnter.append("text")
-          .attr("dy", "0.31em")
+          .attr("dy", ".31em")
           .attr("x", d => d._children ? -6 : 6)
           .attr("text-anchor", d => d._children ? "end" : "start")
           .text(d => d.data.name)
