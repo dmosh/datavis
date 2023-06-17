@@ -46,14 +46,13 @@
   <script>
     d3.csv("data.csv").then(function(data) {
       // Data preprocessing
-      // Data preprocessing
       const nestedData = d3.group(data, d => d.District, d => d.Parameter);
       const root = {
         name: "Uganda",
         children: Array.from(nestedData, ([district, params]) => ({
           name: district,
           children: Array.from(params, ([param, values]) => {
-            const entry = values[0]; // Retrieve the first data entry for the parameter
+            const entry = values[0];
             return {
               name: param,
               ecoli: +entry.ecoli,
@@ -64,7 +63,6 @@
           })
         }))
       };
-
 
       // Chart dimensions
       const width = 800;
@@ -87,7 +85,7 @@
       treemap(rootHierarchy);
 
       // Create the SVG container
-      const svg = d3.select("#chart")
+      const svg = d3.select("#chart-container #chart")
         .append("svg")
         .attr("width", width)
         .attr("height", height);
