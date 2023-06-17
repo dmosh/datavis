@@ -132,7 +132,7 @@
       node.append("title")
         .text(function(d) {
           return (
-            "Parameter: " + d.data.name +
+            "District: " + d.parent.data.name +
             "\nEcoli: " + (isNaN(d.data.ecoli) ? "N/A" : d.data.ecoli) +
             "\npH: " + (isNaN(d.data.ph) ? "N/A" : d.data.ph) +
             "\nConductivity: " + (isNaN(d.data.conductivity) ? "N/A" : d.data.conductivity) +
