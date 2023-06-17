@@ -44,14 +44,11 @@
       const svg = d3.select("#chart-container")
         .append("svg")
         .attr("width", width)
-        .attr("height", height);
-
-      console.log("SVG Element:", svg);
+        .attr("height", height)
+        .style("background-color", "#f9f9f9");
 
       const g = svg.append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-      console.log("G Element:", g);
 
       const rootHierarchy = d3.hierarchy(root);
       const treeData = tree(rootHierarchy);
