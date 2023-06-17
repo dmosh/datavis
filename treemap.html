@@ -84,7 +84,11 @@
         })
         .sort(function(a, b) {
           return b.value - a.value;
+        })
+        .each(function(d) {
+          d.name = d.data.name; // Assign district name to each node
         });
+
 
       treemap(rootHierarchy);
 
