@@ -53,7 +53,10 @@
           name: district,
           children: Array.from(params, ([param, values]) => ({
             name: param,
-            value: +values[0].ecoli
+            value: +values[0].ecoli,
+            ph: +values[0].ph,
+            conductivity: +values[0].conductivity,
+            turbidity: +values[0].turbidity
           }))
         }))
       };
@@ -110,11 +113,18 @@
           return d.data.name;
         })
         .attr("fill", "white");
-
+      
       node.append("title")
         .text(function(d) {
-          return d.data.name + "\nEcoli: " + d.value;
-        });
+          return (
+            "Parameter: " + d.data.name +
+            "\nEcoli: " + d.data.ecoli +
+            "\npH: " + d.data.ph +
+            "\nConductivity: " + d.data.conductivity +
+            "\nTurbidity: " + d.data.turbidity
+          );
+  });
+
     });
   </script>
 </body>
