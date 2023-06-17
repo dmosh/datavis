@@ -45,8 +45,12 @@
 
   <script>
     d3.csv("data.csv").then(function(data) {
+      console.log(data); // Check if the data is loaded correctly
+
       // Data preprocessing
       const nestedData = d3.group(data, d => d.District);
+      console.log(nestedData); // Check if the data is grouped correctly
+    
       const root = {
         name: "Uganda",
         children: Array.from(nestedData, ([district, values]) => ({
@@ -60,6 +64,8 @@
           }))
         }))
       };
+
+  console.log(root);
 
       // Chart dimensions
       const width = 800;
