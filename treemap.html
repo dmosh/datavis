@@ -44,90 +44,89 @@
   </div>
 
   <script>
-    d3.csv("data.csv").then(function(data) {
-      // Data preprocessing
-      const nestedData = d3.group(data, d => d.District, d => d.Parameter);
-      const root = {
-        name: "Uganda",
-        children: Array.from(nestedData, ([district, params]) => ({
-          name: district,
-          children: Array.from(params, ([param, values]) => {
-            const entry = values[values.length - 1]; // Retrieve the latest data entry for the parameter
-            return {
-              name: param,
-              ecoli: +entry.ecoli,
-              ph: +entry.pH,
-              conductivity: +entry["Electrical Conductivity"],
-              turbidity: +entry.turbidity
-            };
-          })
-        }))
-      };
+    const data = [
+      { District: "District A", Parameter: "Parameter 1", ecoli: 10 },
+      { District: "District A", Parameter: "Parameter 2", ecoli: 20 },
+      { District: "District B", Parameter: "Parameter 1", ecoli: 15 },
+      { District: "District B", Parameter: "Parameter 2", ecoli: 25 },
+    ];
 
-      // Chart dimensions
-      const width = 800;
-      const height = 600;
-
-      // Create a D3.js treemap layout
-      const treemap = d3.treemap()
-        .size([width, height])
-        .padding(1);
-
-      // Compute the treemap layout
-      const rootHierarchy = d3.hierarchy(root)
-        .sum(function(d) {
-          return d.value;
+    // Data preprocessing
+    const nestedData = d3.group(data, d => d.District, d => d.Parameter);
+    const root = {
+      name: "Uganda",
+      children: Array.from(nestedData, ([district, params]) => ({
+        name: district,
+        children: Array.from(params, ([param, values]) => {
+          const entry = values[values.length - 1]; // Retrieve the latest data entry for the parameter
+          return {
+            name: param,
+            ecoli: +entry.ecoli,
+          };
         })
-        .sort(function(a, b) {
-          return b.value - a.value;
-        });
+      }))
+    };
 
-      treemap(rootHierarchy);
+    // Chart dimensions
+    const width = 800;
+    const height = 600;
 
-      // Create the SVG container
-      const svg = d3.select("#chart")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height);
+    // Create a D3.js treemap layout
+    const treemap = d3.treemap()
+      .size([width, height])
+      .padding(1);
 
-      // Create the treemap nodes
-      const node = svg.selectAll("g")
-        .data(rootHierarchy.leaves())
-        .enter()
-        .append("g")
-        .attr("transform", function(d) {
-          return "translate(" + d.x0 + "," + d.y0 + ")";
-        });
+    // Compute the treemap layout
+    const rootHierarchy = d3.hierarchy(root)
+      .sum(function(d) {
+        return d.ecoli;
+      })
+      .sort(function(a, b) {
+        return b.ecoli - a.ecoli;
+      });
 
-      node.append("rect")
-        .attr("width", function(d) {
-          return d.x1 - d.x0;
-        })
-        .attr("height", function(d) {
-          return d.y1 - d.y0;
-        })
-        .attr("fill", "steelblue")
-        .attr("stroke", "white");
+    treemap(rootHierarchy);
 
-      node.append("text")
-        .attr("x", 5)
-        .attr("y", 15)
-        .text(function(d) {
-          return d.data.name;
-        })
-        .attr("fill", "white");
+    // Create the SVG container
+    const svg = d3.select("#chart")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height);
 
-      node.append("title")
-        .text(function(d) {
-          return (
-            "Parameter: " + d.data.name +
-            "\nEcoli: " + (isNaN(d.data.ecoli) ? "N/A" : d.data.ecoli) +
-            "\npH: " + (isNaN(d.data.ph) ? "N/A" : d.data.ph) +
-            "\nConductivity: " + (isNaN(d.data.conductivity) ? "N/A" : d.data.conductivity) +
-            "\nTurbidity: " + (isNaN(d.data.turbidity) ? "N/A" : d.data.turbidity)
-          );
-        });
-    });
+    // Create the treemap nodes
+    const node = svg.selectAll("g")
+      .data(rootHierarchy.leaves())
+      .enter()
+      .append("g")
+      .attr("transform", function(d) {
+        return "translate(" + d.x0 + "," + d.y0 + ")";
+      });
+
+    node.append("rect")
+      .attr("width", function(d) {
+        return d.x1 - d.x0;
+      })
+      .attr("height", function(d) {
+        return d.y1 - d.y0;
+      })
+      .attr("fill", "steelblue")
+      .attr("stroke", "white");
+
+    node.append("text")
+      .attr("x", 5)
+      .attr("y", 15)
+      .text(function(d) {
+        return d.data.name;
+      })
+      .attr("fill", "white");
+
+    node.append("title")
+      .text(function(d) {
+        return (
+          "Parameter: " + d.data.name +
+          "\nEcoli: " + (isNaN(d.data.ecoli) ? "N/A" : d.data.ecoli)
+        );
+      });
   </script>
 </body>
 </html>
