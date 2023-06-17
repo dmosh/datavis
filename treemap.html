@@ -52,7 +52,7 @@
         children: Array.from(nestedData, ([district, params]) => ({
           name: district,
           children: Array.from(params, ([param, values]) => {
-            const entry = values[0];
+            const entry = values[values.length - 1]; // Retrieve the latest data entry for the parameter
             return {
               name: param,
               ecoli: +entry.ecoli,
@@ -85,7 +85,7 @@
       treemap(rootHierarchy);
 
       // Create the SVG container
-      const svg = d3.select("#chart-container #chart")
+      const svg = d3.select("#chart")
         .append("svg")
         .attr("width", width)
         .attr("height", height);
@@ -116,7 +116,7 @@
           return d.data.name;
         })
         .attr("fill", "white");
-      
+
       node.append("title")
         .text(function(d) {
           return (
