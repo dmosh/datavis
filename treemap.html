@@ -90,8 +90,11 @@
       // Create the SVG container
       const svg = d3.select("#chart")
         .append("svg")
-        .attr("width", width)
-        .attr("height", height);
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("preserveAspectRatio", "xMidYMid meet")
+        .append("g")
+        .attr("transform", "translate(0,0)");
+
 
       // Create the treemap nodes
       const node = svg.selectAll("g")
