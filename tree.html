@@ -23,7 +23,7 @@
     const tree = d3.tree().nodeSize([dx, dy]);
 
     d3.csv("data.csv").then(data => {
-      const roots = d3.group(data, d => d.root);
+      const districts = d3.group(data, d => d.District);
 
       const svg = d3.create("svg")
         .attr("viewBox", [-margin.left, -margin.top, width, dx])
@@ -129,14 +129,14 @@
         });
       }
 
-      for (const [root, rootData] of roots) {
-        const rootContainer = svg.append("g")
+      for (const [district, districtData] of districts) {
+        const districtContainer = svg.append("g")
           .attr("transform", `translate(${width / 2},${height / 2})`);
 
-        update({ x: 0, y: 0, x0: 0, y0: 0 }, rootData);
+        update({ x: 0, y: 0, x0: 0, y0: 0 }, districtData);
 
-        rootContainer.append(() => gNode.node().cloneNode(true));
-        rootContainer.append(() => gLink.node().cloneNode(true));
+        districtContainer.append(() => gNode.node().cloneNode(true));
+        districtContainer.append(() => gLink.node().cloneNode(true));
       }
 
       container.appendChild(svg.node());
