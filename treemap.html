@@ -1,10 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8">
-  <title>Water Quality Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <title>D3.js Treemap</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     @import url(https://fonts.googleapis.com/css2?family=Comfortaa:wght@300);
 
@@ -77,138 +75,82 @@
   </nav>
   <div class="container">
     <h1>Water Quality Dashboard</h1>
-    <div>
-      <label for="parameter-select">Select Parameter:</label>
-      <select id="parameter-select" onchange="updateChart()"></select>
-    </div>
     <div id="chart-container">
       <h2 id="chart-title"></h2>
+       <div id="chart"></div>
       <div id="treemap-chart" class="chart"></div>
     </div>
   </div>
+ 
 
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.28.0"></script>
   <script>
-    // Global variables
-    let data;
-    let currentParameter = "ecoli";
-    let treemapChart;
-
-    // Load data from data.csv and target.csv
-    d3.csv("data.csv").then(function(dataset) {
-      data = dataset;
-      updateChart();
-    });
-
-    // Function to update the chart based on the selected parameter
-    function updateChart() {
-      const parameter = d3.select("#parameter-select").node().value;
-      currentParameter = parameter;
-
-      // Process the data
-      const processedData = processData(data, parameter);
-
-      // Prepare data for treemap chart
-      const chartData = {
-        series: [
-          {
-            name: parameter,
-            data: processedData.map(function(d) { return d.value; })
-          }
-        ],
-        labels: processedData.map(function(d) { return d.district; })
+    d3.csv("data.csv").then(function(data) {
+      // Data preprocessing
+      const root = {
+        name: "root",
+        children: data.map(function(d) {
+          return {
+            name: d.village,
+            district: d.District,
+            value: +d.ecoli
+          };
+        })
       };
 
-      // Set up chart options
-      const chartOptions = {
-        chart: {
-          type: 'treemap',
-          height: 600
-        },
-        series: chartData.series,
-        labels: chartData.labels,
-        dataLabels: {
-          enabled: true,
-          style: {
-            fill: '#000000',
-            fontSize: '12px',
-            fontFamily: 'Comfortaa, cursive',
-          }
-        },
-        plotOptions: {
-          treemap: {
-            enableShades: false,
-            shadeIntensity: 0.5,
-            colorScale: {
-              ranges: [{
-                from: 0,
-                to: Math.max(...chartData.series[0].data),
-                color: '#2979ff'
-              }]
-            }
-          }
-        }
-      };
+      // Chart dimensions
+      const width = 800;
+      const height = 600;
 
-      // Create or update treemap chart
-      if (!treemapChart) {
-        treemapChart = new ApexCharts(document.querySelector("#treemap-chart"), chartOptions);
-      } else {
-        treemapChart.updateOptions(chartOptions);
-      }
+      // Create a D3.js treemap layout
+      const treemap = d3.treemap()
+        .size([width, height])
+        .padding(1);
 
-      // Render chart
-      treemapChart.render();
+      // Compute the treemap layout
+      const rootHierarchy = d3.hierarchy(root)
+        .sum(function(d) {
+          return d.value;
+        });
+      const tree = treemap(rootHierarchy);
 
-      // Update chart title
-      const chartTitle = getChartTitle(currentParameter);
-      d3.select("#chart-title").text(chartTitle);
-    }
+      // Create the SVG container
+      const svg = d3.select("#chart")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
 
-    // Function to process the raw data
-    function processData(data, parameter) {
-      return data.map(function(d) {
-        return {
-          district: d.District.substring(0, 3),
-          value: +d[parameter]
-        };
-      });
-    }
+      // Create the treemap cells
+      const cell = svg.selectAll("g")
+        .data(tree.leaves())
+        .enter()
+        .append("g")
+        .attr("transform", function(d) {
+          return "translate(" + d.x0 + "," + d.y0 + ")";
+        });
 
-    // Function to get the chart title based on the parameter
-    function getChartTitle(parameter) {
-      switch (parameter) {
-        case "ecoli":
-          return "Ecoli Concentration by District";
-        case "turbidity":
-          return "Turbidity by District";
-        case "sulphate":
-          return "Sulphate Concentration by District";
-        case "pH":
-          return "pH Level by District";
-        default:
-          return "";
-      }
-    }
+      cell.append("rect")
+        .attr("width", function(d) {
+          return d.x1 - d.x0;
+        })
+        .attr("height", function(d) {
+          return d.y1 - d.y0;
+        })
+        .attr("fill", "steelblue")
+        .attr("stroke", "white");
 
-    // Populate parameter select options
-    document.addEventListener('DOMContentLoaded', function() {
-      const parameterSelect = document.getElementById('parameter-select');
-      parameterSelect.addEventListener('change', updateChart);
+      cell.append("text")
+        .attr("x", 5)
+        .attr("y", 15)
+        .text(function(d) {
+          return d.data.name;
+        })
+        .attr("fill", "white");
 
-      const parameters = ['ecoli', 'turbidity', 'pH', 'sulphate'];
-      parameters.forEach(function(parameter) {
-        const option = document.createElement('option');
-        option.value = parameter;
-        option.textContent = parameter.charAt(0).toUpperCase() + parameter.slice(1);
-        parameterSelect.appendChild(option);
-      });
-
-      updateChart();
+      cell.append("title")
+        .text(function(d) {
+          return d.data.name + "\nDistrict: " + d.data.district + "\nEcoli: " + d.data.value;
+        });
     });
   </script>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
