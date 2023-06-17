@@ -46,23 +46,16 @@
   <script>
     d3.csv("data.csv").then(function(data) {
       // Data preprocessing
+      const nestedData = d3.group(data, d => d.District, d => d.Parameter);
       const root = {
         name: "Uganda",
-        children: d3.nest()
-          .key(function(d) { return d.District; })
-          .key(function(d) { return d.Parameter; })
-          .entries(data)
-          .map(function(d) {
-            return {
-              name: d.key,
-              children: d.values.map(function(v) {
-                return {
-                  name: v.key,
-                  value: +v.ecoli
-                };
-              })
-            };
-          })
+        children: Array.from(nestedData, ([district, params]) => ({
+          name: district,
+          children: Array.from(params, ([param, values]) => ({
+            name: param,
+            value: +values[0].ecoli
+          }))
+        }))
       };
 
       // Chart dimensions
