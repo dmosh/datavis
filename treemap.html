@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <title>Water Quality Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300');
+    @import url(https://fonts.googleapis.com/css2?family=Comfortaa:wght@300);
 
     body {
       font-family: 'Comfortaa', cursive;
@@ -19,7 +19,7 @@
       align-items: center;
       flex-direction: column;
     }
-
+    
     #chart-container {
       margin-top: 30px;
       display: flex;
@@ -34,6 +34,14 @@
 
     h1 {
       text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #chart-container {
+      margin-top: 30px;
+    }
+
+    #parameter-select {
       margin-bottom: 20px;
     }
 
@@ -62,7 +70,7 @@
           <a class="nav-link" href="scatter.html">Scatter Plot</a>
         </li>
         <li class="nav-item active">
-          <a class="nav-link" href="radar.html">Radar Plot</a>
+          <a class="nav-link" href="treemap.html">Treemap</a>
         </li>
       </ul>
     </div>
@@ -71,22 +79,21 @@
     <h1>Water Quality Dashboard</h1>
     <div>
       <label for="parameter-select">Select Parameter:</label>
-      <select id="parameter-select"></select>
+      <select id="parameter-select" onchange="updateChart()"></select>
     </div>
     <div id="chart-container">
       <h2 id="chart-title"></h2>
-      <div id="radar-chart" class="chart"></div>
+      <div id="treemap-chart" class="chart"></div>
     </div>
   </div>
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.28.0"></script>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha3/js/bootstrap.bundle.min.js"></script>
   <script>
     // Global variables
     let data;
     let currentParameter = "ecoli";
+    let treemapChart;
 
     // Load data from data.csv and target.csv
     d3.csv("data.csv").then(function(dataset) {
@@ -96,27 +103,27 @@
 
     // Function to update the chart based on the selected parameter
     function updateChart() {
-      const parameter = $("#parameter-select").val();
+      const parameter = d3.select("#parameter-select").node().value;
       currentParameter = parameter;
 
       // Process the data
       const processedData = processData(data, parameter);
 
-      // Prepare data for radar chart
+      // Prepare data for treemap chart
       const chartData = {
         series: [
           {
             name: parameter,
-            data: processedData.map((d) => d.value)
+            data: processedData.map(function(d) { return d.value; })
           }
         ],
-        labels: processedData.map((d) => d.district)
+        labels: processedData.map(function(d) { return d.district; })
       };
 
       // Set up chart options
       const chartOptions = {
         chart: {
-          type: 'radar',
+          type: 'treemap',
           height: 600
         },
         series: chartData.series,
@@ -127,49 +134,43 @@
             fill: '#000000',
             fontSize: '12px',
             fontFamily: 'Comfortaa, cursive',
-            transform: 'rotate(-90deg)', // Rotate labels by -45 degrees
-            textAnchor: 'end' // Align rotated labels to the end
           }
         },
         plotOptions: {
-          radar: {
-            dataLabels: {
-              offsetY: 5,
-              formatter: function(value, { seriesIndex, dataPointIndex }) {
-                if (value === Math.max(...chartData.series[seriesIndex].data))
-                  return value;
-                return '';
-              }
-            },
-            polygons: {
-              fill: {
-                colors: ['#AA4A44', '#2979ff']
-              }
+          treemap: {
+            enableShades: false,
+            shadeIntensity: 0.5,
+            colorScale: {
+              ranges: [{
+                from: 0,
+                to: Math.max(...chartData.series[0].data),
+                color: '#2979ff'
+              }]
             }
           }
         }
       };
 
-      // Remove existing chart
-      if (window.chart) {
-        window.chart.destroy();
+      // Create or update treemap chart
+      if (!treemapChart) {
+        treemapChart = new ApexCharts(document.querySelector("#treemap-chart"), chartOptions);
+      } else {
+        treemapChart.updateOptions(chartOptions);
       }
 
-      // Create radar chart
-      window.chart = new ApexCharts(document.querySelector("#radar-chart"), chartOptions);
-      window.chart.render();
+      // Render chart
+      treemapChart.render();
 
       // Update chart title
       const chartTitle = getChartTitle(currentParameter);
-      $("#chart-title").text(chartTitle);
+      d3.select("#chart-title").text(chartTitle);
     }
 
     // Function to process the raw data
     function processData(data, parameter) {
-      // Process the data here and return an array of objects with district, value, and color properties
       return data.map(function(d) {
         return {
-          district: d.District.substring(0, 3), // Truncate label to the first 3 characters
+          district: d.District.substring(0, 3),
           value: +d[parameter]
         };
       });
@@ -177,8 +178,6 @@
 
     // Function to get the chart title based on the parameter
     function getChartTitle(parameter) {
-      // Return the chart title based on the parameter
-      // Modify as needed
       switch (parameter) {
         case "ecoli":
           return "Ecoli Concentration by District";
@@ -194,18 +193,22 @@
     }
 
     // Populate parameter select options
-    $(document).ready(function() {
-      const parameterSelect = $("#parameter-select");
-      parameterSelect.on("change", updateChart);
+    document.addEventListener('DOMContentLoaded', function() {
+      const parameterSelect = document.getElementById('parameter-select');
+      parameterSelect.addEventListener('change', updateChart);
 
-      const parameters = ["ecoli", "turbidity", "pH", "sulphate"];
+      const parameters = ['ecoli', 'turbidity', 'pH', 'sulphate'];
       parameters.forEach(function(parameter) {
-        const option = $("<option>").val(parameter).text(parameter.charAt(0).toUpperCase() + parameter.slice(1));
-        parameterSelect.append(option);
+        const option = document.createElement('option');
+        option.value = parameter;
+        option.textContent = parameter.charAt(0).toUpperCase() + parameter.slice(1);
+        parameterSelect.appendChild(option);
       });
 
       updateChart();
     });
   </script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
