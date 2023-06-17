@@ -124,8 +124,9 @@
       .attr("x", 5)
       .attr("y", 15)
       .text(function(d) {
-        return d.data.name;
+        return d.parent.data.name; // Retrieve the district name from the parent node
       })
+
       .attr("fill", "white");
 
       node.append("title")
