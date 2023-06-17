@@ -151,6 +151,35 @@
         })
         .attr("stroke", "white");
 
+      // Define a linear gradient for the rectangle fill
+      const gradient = node.append("linearGradient")
+        .attr("id", function(d, i) { return "gradient-" + i; })
+        .attr("gradientUnits", "userSpaceOnUse")
+        .attr("x1", "0%").attr("y1", "0%")
+        .attr("x2", "100%").attr("y2", "0%");
+
+      gradient.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", function(d) {
+          return districtColors(d.parent.data.name);
+        });
+
+      gradient.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", "white");
+
+      node.append("rect")
+        .attr("width", function(d) {
+          return d.x1 - d.x0;
+        })
+        .attr("height", function(d) {
+          return d.y1 - d.y0;
+        })
+        .style("fill", function(d, i) {
+          return "url(#gradient-" + i + ")"; // Apply the gradient to the rectangle fill
+        })
+        .attr("stroke", "white");
+
       node.append("text")
         .attr("x", 5)
         .attr("y", 15)
