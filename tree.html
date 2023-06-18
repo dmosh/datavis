@@ -12,13 +12,12 @@
 
   <script>
     const container = document.getElementById('chart-container');
-    const width = 1000;
-    const height = 600;
+    const width = container.innerWidth;
+    const height = container.innerHeight;
 
     const margin = { top: 20, right: 90, bottom: 30, left: 90 };
     const dx = 10;
     const dy = (width - margin.left - margin.right) / 6;
-    const diagonal = d3.linkHorizontal().x(d => d.y).y(d => d.x);
 
     const tree = d3.tree().nodeSize([dx, dy]);
 
@@ -61,15 +60,15 @@
         .enter()
         .append("path")
         .attr("class", "link")
-        .attr("d", d => diagonal({ source: d.source, target: d.target }))
-        .attr("transform", d => "translate(" + d.target.y + "," + d.target.x + ")");
+        .attr("d", d => d3.curve().x(d => d.y).y(d => d.x))
+        .attr("transform", d => "translate(" + Number(d.y) + "," + Number(d.x) + ")");
 
       const node = g.selectAll(".node")
         .data(nodes)
         .enter()
         .append("g")
         .attr("class", "node")
-        .attr("transform", d => "translate(" + d.y + "," + d.x + ")");
+        .attr("transform", d => "translate(" + Number(d.y) + "," + Number(d.x) + ")");
 
       node.append("circle")
         .attr("r", 4.5);
