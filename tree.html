@@ -20,7 +20,9 @@
 
     d3.csv("data.csv").then(function(data) {
       // Data preprocessing
+      console.log("Raw data:", data);
       const nestedData = d3.group(data, d => d.District);
+      console.log("Nested data:", nestedData); 
       const root = {
         name: "Uganda",
         children: Array.from(nestedData, ([district, values]) => ({
