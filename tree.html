@@ -25,7 +25,7 @@
         name: "Uganda",
         children: Array.from(nestedData, ([district, values]) => ({
           name: district,
-          children: Array.from(d3.group(values, d => d.Village), ([village, villageValues]) => ({
+          children: Array.from(d3.group(values, d => d.village), ([village, villageValues]) => ({
             name: village,
             children: villageValues.map(entry => ({
               name: entry.Parameter,
