@@ -61,14 +61,15 @@
         .enter()
         .append("path")
         .attr("class", "link")
-        .attr("d", d => diagonal({ source: d.source, target: d.target }));
+        .attr("d", d => diagonal({ source: d.source, target: d.target }).join(""))
+        .attr("transform", d => "translate(" + parseFloat(d.y) + "," + parseFloat(d.x) + ")");
 
       const node = g.selectAll(".node")
         .data(nodes)
         .enter()
         .append("g")
         .attr("class", "node")
-        .attr("transform", d => "translate(" + d.y + "," + d.x + ")");
+        .attr("transform", d => "translate(" + parseFloat(d.y) + "," + parseFloat(d.x) + ")");
 
       node.append("circle")
         .attr("r", 4.5);
