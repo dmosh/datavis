@@ -81,6 +81,8 @@
         // ...
 
         // Update the links...
+        const links = rootHierarchy.links(); // Define the links variable
+
         const link = gLink.selectAll("path")
           .data(links, d => d.target.id);
 
@@ -98,7 +100,7 @@
 
         // Append the SVG to the container
         const container = document.getElementById('chart-container');
-        container.appendChild(svg.node());
+        container.parentNode.insertBefore(svg.node(), container);
       };
 
       const container = document.getElementById('chart-container');
