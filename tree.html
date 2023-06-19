@@ -147,35 +147,36 @@
 
           // Compute the new tree layout.
           tree(rootHierarchy);
-
+        
           let left = rootHierarchy;
           let right = rootHierarchy;
           rootHierarchy.eachBefore(node => {
             if (node.x < left.x) left = node;
             if (node.x > right.x) right = node;
           });
-
+        
           const height = right.x - left.x + margin.top + margin.bottom + dx; // Add dx to accommodate the node size
-
+        
           const transition = svg.transition()
             .duration(duration)
             .attr("viewBox", [-margin.left, left.x - margin.top, width, height])
             .tween("resize", window.ResizeObserver ? null : () => () => svg.dispatch("toggle"));
-
+        
           // Update the nodes...
           const node = gNode.selectAll("g")
             .data(nodes, d => d.id);
-
+        
           // Enter any new nodes at the parent's previous position.
           const nodeEnter = node.enter().append("g")
             .attr("transform", d => `translate(${source.y0},${source.x0})`)
             .attr("fill-opacity", 0)
             .attr("stroke-opacity", 0)
             .on("click", (event, d) => {
-              d.children = d.children ? null : d._children;
-              update(event, d);
+              if (d.depth >= 2) {
+                d.children = d.children ? null : d._children;
+                update(event, d);
+              }
             });
-
           nodeEnter.merge(node) // Update existing nodes as well
             .transition(transition)
             .attr("transform", d => `translate(${d.y},${d.x})`);
