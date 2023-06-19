@@ -129,7 +129,10 @@
                 }
               } else if (d.depth === 4) {
                 // Display actual parameter values for village nodes
-                return `${d.data.name}=${d.data.value}`;
+                const parameter = d.data.children.find(child => child.name === d.data.name);
+                if (parameter) {
+                  return `${d.data.name}=${parameter.value}`;
+                }
               }
               // Display district and village names
               return d.data.name;
