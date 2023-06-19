@@ -214,23 +214,25 @@
             .attr("stroke-opacity", 0);
 
           // Update the links...
-          const link = gLink.selectAll("path")
+          const link = gLink.selectAll("path.link")
             .data(links, d => d.target.id);
-
+          
           // Enter any new links at the parent's previous position.
           const linkEnter = link.enter().append("path")
+            .attr("class", "link")
             .attr("d", d => {
               const o = { x: source.x0, y: source.y0 };
               return diagonal({ source: o, target: o });
             })
-            .attr("class", "link")
-            .attr("stroke", d => d.target.data.color); // Set the stroke color to the target node's color
-
-
+            .attr("stroke", d => d.target.data.color) // Set the stroke color to the target node's color
+            .attr("stroke-opacity", 0.4)
+            .attr("stroke-width", 1.5);
+          
           // Transition links to their new position.
           link.merge(linkEnter).transition(transition)
-            .attr("d", diagonal);
-
+            .attr("d", diagonal)
+            .attr("stroke", d => d.target.data.color); // Update the stroke color during transition
+          
           // Transition exiting nodes to the parent's new position.
           link.exit().transition(transition).remove()
             .attr("d", d => {
