@@ -50,7 +50,7 @@
         rootHierarchy.descendants().forEach((d, i) => {
           d.id = i;
           d._children = d.children;
-          if (d.depth > 2) {
+          if (d.depth > 1) {
             d.children = null;
           }
         });
@@ -108,7 +108,13 @@
 
           nodeEnter.append("circle")
             .attr("r", 2.5)
-            .attr("fill", d => d._children ? "#555" : "#999")
+            .attr("fill", d => {
+              if (d.depth <= 1) {
+                return "#555"; // Root and immediate child nodes are enabled
+              } else {
+                return "#999"; // Rest of the nodes are collapsed and disabled initially
+              }
+            })
             .attr("stroke-width", 10);
 
           nodeEnter.append("text")
@@ -116,6 +122,13 @@
             .attr("x", d => d._children ? -6 : 6)
             .attr("text-anchor", d => d._children ? "end" : "start")
             .text(d => d.data.name)
+            .style("fill", d => {
+              if (d.depth <= 1) {
+                return "#000"; // Root and immediate child nodes are enabled
+              } else {
+                return "#999"; // Rest of the nodes are collapsed and disabled initially
+              }
+            })
             .clone(true).lower()
             .attr("stroke-linejoin", "round")
             .attr("stroke-width", 3)
