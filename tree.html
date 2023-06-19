@@ -207,10 +207,10 @@
 
         // Lazily load children for the specified node.
         function loadChildren(node) {
-          const values = node.data._values;
+          const values = node.data.children;
           if (values && !node.data.children) {
             node.data.children = values.map(value => ({
-              name: value.Village,
+              name: value.name,
             }));
           }
         }
