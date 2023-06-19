@@ -127,6 +127,9 @@
                     .join(", ");
                   return parameters;
                 }
+              } else if (d.depth === 4) {
+                // Display actual parameter values for village nodes
+                return `${d.data.name}=${d.data.value}`;
               }
               // Display district and village names
               return d.data.name;
