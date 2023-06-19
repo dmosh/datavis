@@ -84,7 +84,6 @@
 
         const gLink = svg.append("g")
           .attr("fill", "none")
-          .attr("stroke", "#555")
           .attr("stroke-opacity", 0.4)
           .attr("stroke-width", 1.5);
 
@@ -173,7 +172,10 @@
             .attr("d", d => {
               const o = { x: source.x0, y: source.y0 };
               return diagonal({ source: o, target: o });
-            });
+            })
+            .attr("stroke", d => colorScale(d.target.depth)) // Set the stroke color based on the target node's depth
+            .attr("stroke-opacity", 0.4)
+            .attr("stroke-width", 1.5);
 
           // Transition links to their new position.
           link.merge(linkEnter).transition(transition)
