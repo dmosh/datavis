@@ -27,7 +27,7 @@
       // Data preprocessing
       console.log("Raw data:", data);
       const nestedData = d3.group(data, d => d.District);
-      console.log("Nested data:", nestedData);
+      console.log("Nested data:", nestedData); 
       const root = {
         name: "Uganda",
         children: Array.from(nestedData, ([district, values]) => ({
@@ -36,9 +36,11 @@
             name: village,
             children: villageValues.map(entry => ({
               name: entry.Parameter,
-              ecoli: +entry.Ecoli,
-              pH: +entry.pH,
-              turbidity: +entry.Turbidity
+              children: [
+                { name: "ecoli", value: +entry.ecoli },
+                { name: "pH", value: +entry.pH },
+                { name: "turbidity", value: +entry.turbidity }
+              ]
             }))
           }))
         }))
