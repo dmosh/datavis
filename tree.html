@@ -113,6 +113,8 @@
             .attr("fill", d => d._children ? "#555" : d.data.children ? "#999" : "#777")
             .attr("stroke-width", 10);
 
+          // ...
+
           nodeEnter.append("text")
             .attr("dy", "0.31em")
             .attr("x", d => d._children ? -6 : 6)
@@ -122,18 +124,14 @@
                 // Display parameters for village nodes
                 if (d.data.children) {
                   const parameters = d.data.children
-                    .filter(child => child.name !== undefined && child.value !== undefined)
-                    .map(child => `${child.name}=${child.value}`)
-                    .join(", ");
+                    .filter(child => child.name !== undefined && child.children !== undefined)
+                    .map(child => {
+                      const parameterValues = child.children.map(grandchild => `${grandchild.name}=${grandchild.value}`);
+                      return parameterValues.join(", ");
+                    })
+                    .join(" | ");
                   return parameters;
                 }
-              } else if (d.depth === 4) {
-                // Display actual parameter values for village nodes
-                const parameters = d.parent.data.children
-                  .filter(child => child.name !== undefined && child.value !== undefined)
-                  .map(child => `${child.name}=${child.value}`)
-                  .join(", ");
-                return parameters;
               }
               // Display district and village names
               return d.data.name;
@@ -142,6 +140,8 @@
             .attr("stroke-linejoin", "round")
             .attr("stroke-width", 3)
             .attr("stroke", "white");
+          
+          // ...
 
           // Transition nodes to their new position.
           const nodeUpdate = node.merge(nodeEnter).transition(transition)
