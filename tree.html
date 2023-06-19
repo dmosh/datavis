@@ -187,8 +187,11 @@
             .transition(transition)
             .attr("transform", d => `translate(${d.y},${d.x})`)
             .on("click", (event, d) => {
-              if (d.depth > 2) {
+              if (d.depth === 1) { // Expand district nodes when clicked
                 d.children = d.children ? null : d._children;
+                update(event, d);
+              } else if (d.depth > 1) { // Expand village nodes when clicked
+                d.children = d.children ? null : d.data._children;
                 update(event, d);
               }
             });
