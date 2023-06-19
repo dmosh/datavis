@@ -211,6 +211,7 @@
           if (values && !node.data.children) {
             node.data.children = values.map(value => ({
               name: value.name,
+              children: [] // Add this line to set an empty array for children
             }));
           }
         }
