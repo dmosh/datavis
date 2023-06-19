@@ -32,29 +32,17 @@
         name: "Uganda",
         children: Array.from(nestedData, ([district, values]) => ({
           name: district,
-          children: Array.from(d3.group(values, d => d.village), ([village, villageValues]) => {
-            const parametersSet = new Set(); // Keep track of unique parameters
-            const children = villageValues.flatMap(entry => {
-              const parameter = entry.Parameter;
-              if (!parametersSet.has(parameter)) {
-                parametersSet.add(parameter);
-                return [
-                  { name: parameter },
-                  { name: "ecoli", value: +entry.ecoli },
-                  { name: "pH", value: +entry.pH },
-                  { name: "turbidity", value: +entry.turbidity }
-                ];
-              }
-              return [];
-            });
-
-            return {
-              name: village,
-              children
-            };
-          })
+          children: Array.from(d3.group(values, d => d.village), ([village, villageValues]) => ({
+            name: village,
+            children: [
+              { name: "ecoli", value: villageValues.find(entry => entry.Parameter === "ecoli").Value },
+              { name: "pH", value: villageValues.find(entry => entry.Parameter === "pH").Value },
+              { name: "turbidity", value: villageValues.find(entry => entry.Parameter === "turbidity").Value }
+            ]
+          }))
         }))
       };
+
 
       const chart = () => {
         const rootHierarchy = d3.hierarchy(root);
