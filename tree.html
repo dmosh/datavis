@@ -172,6 +172,7 @@
             .attr("fill-opacity", 0)
             .attr("stroke-opacity", 0)
             .on("click", (event, d) => {
+              if (d.depth === 0) return; // Prevent collapse/expand for the root node
               d.children = d.children ? null : d._children;
               update(event, d);
             });
@@ -230,16 +231,12 @@
             .attr("d", d => {
               const o = { x: source.x0, y: source.y0 };
               return diagonal({ source: o, target: o });
-            })
-            .attr("stroke", d => d.target.data.color) // Set the stroke color to the target node's color
-            .attr("stroke-opacity", 0.4)
-            .attr("stroke-width", 1.5);
-          
+            });
+
           // Transition links to their new position.
           link.merge(linkEnter).transition(transition)
-            .attr("d", diagonal)
-            .attr("stroke", d => d.target.data.color); // Update the stroke color during transition
-          
+            .attr("d", diagonal);
+
           // Transition exiting nodes to the parent's new position.
           link.exit().transition(transition).remove()
             .attr("d", d => {
@@ -254,21 +251,11 @@
           });
         }
 
-        // Collapse all nodes except the root and its immediate children.
-        rootHierarchy.each((d) => {
-          if (d.depth > 1) {
-            d._children = d.children;
-            d.children = null;
-          }
-        });
-
         update(null, rootHierarchy);
-
         return svg.node();
       };
 
-      const container = document.getElementById('chart-container');
-      container.appendChild(chart());
+      document.getElementById("chart-container").appendChild(chart());
     });
   </script>
 </body>
