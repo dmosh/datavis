@@ -83,20 +83,6 @@
           // Compute the new tree layout.
           tree(rootHierarchy);
 
-          let left = rootHierarchy;
-          let right = rootHierarchy;
-          rootHierarchy.eachBefore(node => {
-            if (node.x < left.x) left = node;
-            if (node.x > right.x) right = node;
-          });
-
-          const height = right.x - left.x + margin.top + margin.bottom;
-
-          const transition = svg.transition()
-            .duration(duration)
-            .attr("viewBox", [-margin.left, left.x - margin.top, width, height])
-            .tween("resize", window.ResizeObserver ? null : () => () => svg.dispatch("toggle"));
-
           // Update the nodes...
           const node = gNode.selectAll("g")
             .data(nodes, d => d.id);
@@ -165,13 +151,16 @@
             .attr("stroke", "white");
 
           // Transition nodes to their new position.
-          const nodeUpdate = node.merge(nodeEnter).transition(transition)
+          const nodeUpdate = node.merge(nodeEnter).transition()
+            .duration(duration)
             .attr("transform", d => `translate(${d.y},${d.x})`)
             .attr("fill-opacity", 1)
             .attr("stroke-opacity", 1);
 
           // Transition exiting nodes to the parent's new position.
-          const nodeExit = node.exit().transition(transition).remove()
+          const nodeExit = node.exit().transition()
+            .duration(duration)
+            .remove()
             .attr("transform", d => `translate(${source.y},${source.x})`)
             .attr("fill-opacity", 0)
             .attr("stroke-opacity", 0);
@@ -188,11 +177,14 @@
             });
 
           // Transition links to their new position.
-          link.merge(linkEnter).transition(transition)
+          link.merge(linkEnter).transition()
+            .duration(duration)
             .attr("d", diagonal);
 
           // Transition exiting nodes to the parent's new position.
-          link.exit().transition(transition).remove()
+          link.exit().transition()
+            .duration(duration)
+            .remove()
             .attr("d", d => {
               const o = { x: source.x, y: source.y };
               return diagonal({ source: o, target: o });
@@ -203,26 +195,36 @@
             d.x0 = d.x;
             d.y0 = d.y;
           });
+
+          // Update the children property of each node
+          rootHierarchy.each(node => {
+            if (node.data.children) {
+              node.children = node.data.children;
+            }
+          });
         }
 
-        // Lazily load children for the specified node.
-        function loadChildren(node) {
-          const values = node.data.children;
-          if (values && !node.data.children) {
-            node.data.children = values.map(value => ({
-              name: value.name,
-              children: [] // Add this line to set an empty array for children
-            }));
-          }
-        }
-
-        root.children.forEach(loadChildren);
         update(null, rootHierarchy);
+
+        function loadChildren(node) {
+          // Simulate loading children asynchronously
+          setTimeout(() => {
+            const childrenData = [
+              { name: "Child 1" },
+              { name: "Child 2" },
+              { name: "Child 3" }
+            ];
+
+            node.children = childrenData.map(d => d3.hierarchy(d));
+            update(null, node);
+          }, 1000);
+        }
 
         return svg.node();
       };
 
-      document.getElementById("chart-container").appendChild(chart());
+      const container = document.getElementById("chart-container");
+      container.appendChild(chart());
     });
   </script>
 </body>
