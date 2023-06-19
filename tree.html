@@ -27,25 +27,20 @@
       // Data preprocessing
       console.log("Raw data:", data);
       const nestedData = d3.group(data, d => d.District);
-      console.log("Nested data:", nestedData);
+      console.log("Nested data:", nestedData); 
       const root = {
         name: "Uganda",
-        children: Array.from(nestedData, ([district, districtValues]) => {
-          const villageData = Array.from(d3.group(districtValues, d => d.village), ([village, villageValues]) => ({
+        children: Array.from(nestedData, ([district, values]) => ({
+          name: district,
+          children: Array.from(d3.group(values, d => d.village), ([village, villageValues]) => ({
             name: village,
             children: villageValues.map(entry => ({
               name: entry.Parameter,
               ecoli: +entry.ecoli
             }))
-          }));
-      
-          return {
-            name: district,
-            children: villageData.length > 0 ? villageData : null
-          };
-        })
+          }))
+        }))
       };
-
 
       const chart = () => {
         const rootHierarchy = d3.hierarchy(root);
@@ -55,7 +50,7 @@
         rootHierarchy.descendants().forEach((d, i) => {
           d.id = i;
           d._children = d.children;
-          if (d.depth > 1) {
+          if (d.depth > 2) {
             d.children = null;
           }
         });
@@ -83,6 +78,20 @@
           // Compute the new tree layout.
           tree(rootHierarchy);
 
+          let left = rootHierarchy;
+          let right = rootHierarchy;
+          rootHierarchy.eachBefore(node => {
+            if (node.x < left.x) left = node;
+            if (node.x > right.x) right = node;
+          });
+
+          const height = right.x - left.x + margin.top + margin.bottom;
+
+          const transition = svg.transition()
+            .duration(duration)
+            .attr("viewBox", [-margin.left, left.x - margin.top, width, height])
+            .tween("resize", window.ResizeObserver ? null : () => () => svg.dispatch("toggle"));
+
           // Update the nodes...
           const node = gNode.selectAll("g")
             .data(nodes, d => d.id);
@@ -93,74 +102,33 @@
             .attr("fill-opacity", 0)
             .attr("stroke-opacity", 0)
             .on("click", (event, d) => {
-              if (d._children) {
-                d.children = d._children;
-                d._children = null;
-              } else {
-                d._children = d.children;
-                d.children = null;
-                loadChildren(d);
-              }
+              d.children = d.children ? null : d._children;
               update(event, d);
             });
 
           nodeEnter.append("circle")
             .attr("r", 2.5)
-            .attr("fill", d => {
-              if (d.depth === 0) {
-                return "#555"; // Root node
-              } else if (d._children) {
-                return "#555"; // Expanded node
-              } else {
-                return "#999"; // Collapsed node
-              }
-            })
-            .attr("stroke-width", 10)
-            .style("pointer-events", d => {
-              if (d.depth === 0) {
-                return "auto"; // Enable pointer events for root node
-              } else {
-                return "none"; // Disable pointer events for other nodes
-              }
-            });
+            .attr("fill", d => d._children ? "#555" : "#999")
+            .attr("stroke-width", 10);
 
           nodeEnter.append("text")
             .attr("dy", "0.31em")
             .attr("x", d => d._children ? -6 : 6)
             .attr("text-anchor", d => d._children ? "end" : "start")
             .text(d => d.data.name)
-            .style("fill", d => {
-              if (d.depth === 0) {
-                return "#000"; // Root node
-              } else if (d._children) {
-                return "#000"; // Expanded node
-              } else {
-                return "#999"; // Collapsed node
-              }
-            })
-            .style("pointer-events", d => {
-              if (d.depth === 0) {
-                return "auto"; // Enable pointer events for root node
-              } else {
-                return "none"; // Disable pointer events for other nodes
-              }
-            })
             .clone(true).lower()
             .attr("stroke-linejoin", "round")
             .attr("stroke-width", 3)
             .attr("stroke", "white");
 
           // Transition nodes to their new position.
-          const nodeUpdate = node.merge(nodeEnter).transition()
-            .duration(duration)
+          const nodeUpdate = node.merge(nodeEnter).transition(transition)
             .attr("transform", d => `translate(${d.y},${d.x})`)
             .attr("fill-opacity", 1)
             .attr("stroke-opacity", 1);
 
           // Transition exiting nodes to the parent's new position.
-          const nodeExit = node.exit().transition()
-            .duration(duration)
-            .remove()
+          const nodeExit = node.exit().transition(transition).remove()
             .attr("transform", d => `translate(${source.y},${source.x})`)
             .attr("fill-opacity", 0)
             .attr("stroke-opacity", 0);
@@ -177,14 +145,11 @@
             });
 
           // Transition links to their new position.
-          link.merge(linkEnter).transition()
-            .duration(duration)
+          link.merge(linkEnter).transition(transition)
             .attr("d", diagonal);
 
           // Transition exiting nodes to the parent's new position.
-          link.exit().transition()
-            .duration(duration)
-            .remove()
+          link.exit().transition(transition).remove()
             .attr("d", d => {
               const o = { x: source.x, y: source.y };
               return diagonal({ source: o, target: o });
@@ -195,35 +160,22 @@
             d.x0 = d.x;
             d.y0 = d.y;
           });
-
-          // Update the children property of each node
-          rootHierarchy.each(node => {
-            if (node.data.children) {
-              node.children = node.data.children;
-            }
-          });
         }
+
+        // Collapse all nodes except the root and its immediate children.
+        rootHierarchy.each((d) => {
+          if (d.depth > 1) {
+            d._children = d.children;
+            d.children = null;
+          }
+        });
 
         update(null, rootHierarchy);
-
-        function loadChildren(node) {
-          // Simulate loading children asynchronously
-          setTimeout(() => {
-            const childrenData = [
-              { name: "Child 1" },
-              { name: "Child 2" },
-              { name: "Child 3" }
-            ];
-
-            node.children = childrenData.map(d => d3.hierarchy(d));
-            update(null, node);
-          }, 1000);
-        }
 
         return svg.node();
       };
 
-      const container = document.getElementById("chart-container");
+      const container = document.getElementById('chart-container');
       container.appendChild(chart());
     });
   </script>
