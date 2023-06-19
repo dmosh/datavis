@@ -55,14 +55,14 @@
 
   <script>
     const margin = { top: 20, right: 90, bottom: 30, left: 90 };
-    const height = 500;
-    const dx = 150; // Set the vertical distance between nodes
-    const dy = 100; // Set the horizontal distance between nodes
+    const width = 960;
+    const dx = 50; // Set the horizontal distance between nodes
+    const dy = 150; // Set the vertical distance between nodes
 
-    const tree = d3.tree().nodeSize([dy, dx]);
+    const tree = d3.tree().nodeSize([dx, dy]);
 
     // Define the diagonal function
-    const diagonal = d3.linkHorizontal()
+    const diagonal = d3.linkVertical()
       .x(d => d.y)
       .y(d => d.x);
 
@@ -92,8 +92,8 @@
       const chart = () => {
         const rootHierarchy = d3.hierarchy(root);
 
-        rootHierarchy.x0 = 0;
-        rootHierarchy.y0 = dy / 2;
+        rootHierarchy.x0 = dy / 2;
+        rootHierarchy.y0 = 0;
         rootHierarchy.descendants().forEach((d, i) => {
           d.id = i;
           d._children = d.children;
@@ -103,7 +103,7 @@
         });
 
         const svg = d3.create("svg")
-          .attr("viewBox", [-margin.left, -margin.top, dy, height])
+          .attr("viewBox", [-margin.left, -margin.top, width, dx])
           .style("font", "10px sans-serif")
           .style("user-select", "none");
 
@@ -131,7 +131,7 @@
             if (node.x > right.x) right = node;
           });
 
-          const width = right.x - left.x + margin.top + margin.bottom + dy; // Add dy to accommodate the node size
+          const height = right.x - left.x + margin.top + margin.bottom + dx; // Add dx to accommodate the node size
 
           const transition = svg.transition()
             .duration(duration)
