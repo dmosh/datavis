@@ -30,16 +30,22 @@
       console.log("Nested data:", nestedData);
       const root = {
         name: "Uganda",
-        children: Array.from(nestedData, ([district, values]) => ({
-          name: district,
-          children: [{
-            name: "Loading...", // Placeholder node
-            children: null,
-          }],
-          _values: values, // Store values for lazy loading
-          _children: null, // Stores the actual children after loading
-        })),
+        children: Array.from(nestedData, ([district, districtValues]) => {
+          const villageData = Array.from(d3.group(districtValues, d => d.village), ([village, villageValues]) => ({
+            name: village,
+            children: villageValues.map(entry => ({
+              name: entry.Parameter,
+              ecoli: +entry.ecoli
+            }))
+          }));
+      
+          return {
+            name: district,
+            children: villageData.length > 0 ? villageData : null
+          };
+        })
       };
+
 
       const chart = () => {
         const rootHierarchy = d3.hierarchy(root);
