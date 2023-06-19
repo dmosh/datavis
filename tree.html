@@ -5,15 +5,75 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     /* Add any custom styles here */
+    .circle-root {
+      fill: #fca903;
+      stroke: #fca903;
+      stroke-width: 10;
+    }
+
+    .circle-district {
+      fill: #00b8d4;
+      stroke: #00b8d4;
+      stroke-width: 10;
+    }
+
+    .circle-village {
+      fill: #7fb800;
+      stroke: #7fb800;
+      stroke-width: 10;
+    }
+
+    .circle-parameter {
+      fill: #ff4081;
+      stroke: #ff4081;
+      stroke-width: 10;
+    }
+
+    .link {
+      fill: none;
+      stroke-width: 1.5;
+    }
+
+    .key-item {
+      display: inline-block;
+      margin-right: 10px;
+    }
   </style>
 </head>
 <body>
+  <div id="key-container">
+    <div class="key-item">
+      <svg width="10" height="10">
+        <circle class="circle-root" cx="5" cy="5" r="4.5"></circle>
+      </svg>
+      Root Node
+    </div>
+    <div class="key-item">
+      <svg width="10" height="10">
+        <circle class="circle-district" cx="5" cy="5" r="4.5"></circle>
+      </svg>
+      District Node
+    </div>
+    <div class="key-item">
+      <svg width="10" height="10">
+        <circle class="circle-village" cx="5" cy="5" r="4.5"></circle>
+      </svg>
+      Village Node
+    </div>
+    <div class="key-item">
+      <svg width="10" height="10">
+        <circle class="circle-parameter" cx="5" cy="5" r="4.5"></circle>
+      </svg>
+      Parameter Node
+    </div>
+  </div>
+
   <div id="chart-container"></div>
 
   <script>
     const margin = { top: 20, right: 90, bottom: 30, left: 90 };
     const width = 960;
-    const dx = 10;
+    const dx = 15;
     const dy = width / 6;
 
     const tree = d3.tree().nodeSize([dx, dy]);
@@ -64,7 +124,6 @@
 
         const gLink = svg.append("g")
           .attr("fill", "none")
-          .attr("stroke", "#555")
           .attr("stroke-opacity", 0.4)
           .attr("stroke-width", 1.5);
 
@@ -109,37 +168,32 @@
             });
 
           nodeEnter.append("circle")
-            .attr("r", 2.5)
-            .attr("fill", d => d._children ? "#555" : d.data.children ? "#999" : "#777")
-            .attr("stroke-width", 10);
+            .attr("r", 6)
+            .attr("class", d => {
+              if (d.depth === 0) return "circle-root";
+              else if (d.depth === 1) return "circle-district";
+              else if (d.depth === 2) return "circle-village";
+              else if (d.depth === 3) return "circle-parameter";
+            });
 
-          // ...
-        
-        function getParameterValues(node) {
-          if (node.depth === 3 && node.data.children) {
-            const parameterValues = node.data.children.map(child => `${child.name}=${child.value}`);
-            return parameterValues.join(", ");
-          } else if (node.depth === 4 && node.parent.data.children) {
-            const parameterValues = node.parent.data.children.map(child => `${child.name}=${child.value}`);
-            return parameterValues.join(", ");
-          }
-          return "";
-        }
-        
-        nodeEnter.append("text")
-          .attr("dy", "0.31em")
-          .attr("x", d => d._children ? -6 : 6)
-          .attr("text-anchor", d => d._children ? "end" : "start")
-          .text(d => {
-            const parameterValues = getParameterValues(d);
-            return parameterValues !== "" ? parameterValues : d.data.name;
-          })
-          .clone(true).lower()
-          .attr("stroke-linejoin", "round")
-          .attr("stroke-width", 3)
-          .attr("stroke", "white");
-        
-        // ...
+          nodeEnter.append("text")
+            .attr("dy", "0.31em")
+            .attr("x", d => d._children ? -6 : 6)
+            .attr("text-anchor", d => d._children ? "end" : "start")
+            .text(d => {
+              if (d.depth === 3 && d.data.children) {
+                const parameterValues = d.data.children.map(child => `${child.name}=${child.value}`);
+                return parameterValues.join(", ");
+              } else if (d.depth === 4 && d.parent.data.children) {
+                const parameterValues = d.parent.data.children.map(child => `${child.name}=${child.value}`);
+                return parameterValues.join(", ");
+              }
+              return d.data.name;
+            })
+            .clone(true).lower()
+            .attr("stroke-linejoin", "round")
+            .attr("stroke-width", 3)
+            .attr("stroke", "white");
 
           // Transition nodes to their new position.
           const nodeUpdate = node.merge(nodeEnter).transition(transition)
@@ -162,7 +216,8 @@
             .attr("d", d => {
               const o = { x: source.x0, y: source.y0 };
               return diagonal({ source: o, target: o });
-            });
+            })
+            .attr("class", "link");
 
           // Transition links to their new position.
           link.merge(linkEnter).transition(transition)
