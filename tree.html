@@ -116,14 +116,24 @@
             .attr("stroke-width", 10);
 
           nodeEnter.append("text")
-            .attr("dy", "0.31em")
-            .attr("x", d => d._children ? -6 : 6)
-            .attr("text-anchor", d => d._children ? "end" : "start")
-            .text(d => d.data.name)
-            .clone(true).lower()
-            .attr("stroke-linejoin", "round")
-            .attr("stroke-width", 3)
-            .attr("stroke", "white");
+          .attr("dy", "0.31em")
+          .attr("x", d => d._children ? -6 : 6)
+          .attr("text-anchor", d => d._children ? "end" : "start")
+          .text(d => {
+            if (d.depth === 3) {
+              // Display parameters for village nodes
+              const parameters = d.data.children.map(child => child.name).join(", ");
+              return parameters;
+            } else {
+              // Display district and village names
+              return d.data.name;
+            }
+          })
+          .clone(true).lower()
+          .attr("stroke-linejoin", "round")
+          .attr("stroke-width", 3)
+          .attr("stroke", "white");
+
 
           // Transition nodes to their new position.
           const nodeUpdate = node.merge(nodeEnter).transition(transition)
