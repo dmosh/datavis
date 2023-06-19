@@ -5,10 +5,22 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     /* Add any custom styles here */
+    .key-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .key-item .key-color {
+      width: 15px;
+      height: 15px;
+      margin-right: 5px;
+    }
   </style>
 </head>
 <body>
   <div id="chart-container"></div>
+  <div id="key-container"></div>
 
   <script>
     const margin = { top: 20, right: 90, bottom: 30, left: 90 };
@@ -28,31 +40,29 @@
       console.log("Raw data:", data);
       const nestedData = d3.group(data, d => d.District);
       console.log("Nested data:", nestedData); 
-      const villageParams = Array.from(nestedData, ([district, values]) => ({
-        district,
-        villages: Array.from(d3.group(values, d => d.village), ([village, villageValues]) => ({
-          village,
-          parameters: [
-            { name: "ecoli", value: villageValues.find(entry => entry.Parameter === "ecoli")?.Value || 0 },
-            { name: "pH", value: villageValues.find(entry => entry.Parameter === "pH")?.Value || 0 },
-            { name: "turbidity", value: villageValues.find(entry => entry.Parameter === "turbidity")?.Value || 0 }
-          ]
-        }))
-      }));
-
       const root = {
         name: "Uganda",
-        children: villageParams.map(({ district, villages }) => ({
+        children: Array.from(nestedData, ([district, values]) => ({
           name: district,
-          children: villages.map(({ village, parameters }) => ({
+          children: Array.from(d3.group(values, d => d.village), ([village, villageValues]) => ({
             name: village,
-            children: parameters.map(parameter => ({
-              name: parameter.name,
-              value: parameter.value
-            }))
+            children: [
+              { name: "ecoli", value: villageValues.find(entry => entry.Parameter === "ecoli")?.Value || 0 },
+              { name: "pH", value: villageValues.find(entry => entry.Parameter === "pH")?.Value || 0 },
+              { name: "turbidity", value: villageValues.find(entry => entry.Parameter === "turbidity")?.Value || 0 }
+            ]
           }))
         }))
       };
+
+      const rootColor = "steelblue"; // Color for the root node
+      const districtColor = "lightblue"; // Color for the district nodes
+      const villageColor = "lightgreen"; // Color for the village nodes
+      const parameterColor = "lightyellow"; // Color for the parameter nodes
+
+      const colorScale = d3.scaleOrdinal()
+        .domain([0, 1, 2, 3])
+        .range([rootColor, districtColor, villageColor, parameterColor]);
 
       const chart = () => {
         const rootHierarchy = d3.hierarchy(root);
@@ -120,36 +130,27 @@
 
           nodeEnter.append("circle")
             .attr("r", 2.5)
-            .attr("fill", d => d._children ? "#555" : d.data.children ? "#999" : "#777")
+            .attr("fill", d => colorScale(d.depth))
             .attr("stroke-width", 10);
-
-          // ...
-
-          function getParameterValues(node) {
-            if (node.depth === 3 && node.data.children) {
-              const parameterValues = node.data.children.map(child => `${child.name}=${child.value}`);
-              return parameterValues.join(", ");
-            } else if (node.depth === 4 && node.parent.data.children) {
-              const parameterValues = node.parent.data.children.map(child => `${child.name}=${child.value}`);
-              return parameterValues.join(", ");
-            }
-            return "";
-          }
 
           nodeEnter.append("text")
             .attr("dy", "0.31em")
             .attr("x", d => d._children ? -6 : 6)
             .attr("text-anchor", d => d._children ? "end" : "start")
             .text(d => {
-              const parameterValues = getParameterValues(d);
-              return parameterValues !== "" ? parameterValues : d.data.name;
+              if (d.depth === 3 && d.data.children) {
+                const parameterValues = d.data.children.map(child => `${child.name}=${child.value}`);
+                return parameterValues.join(", ");
+              } else if (d.depth === 4 && d.parent.data.children) {
+                const parameterValues = d.parent.data.children.map(child => `${child.name}=${child.value}`);
+                return parameterValues.join(", ");
+              }
+              return d.data.name;
             })
             .clone(true).lower()
             .attr("stroke-linejoin", "round")
             .attr("stroke-width", 3)
             .attr("stroke", "white");
-
-          // ...
 
           // Transition nodes to their new position.
           const nodeUpdate = node.merge(nodeEnter).transition(transition)
@@ -207,6 +208,29 @@
 
       const container = document.getElementById('chart-container');
       container.appendChild(chart());
+
+      // Add a key describing the colors
+      const keyData = [
+        { label: "Root", color: rootColor },
+        { label: "District", color: districtColor },
+        { label: "Village", color: villageColor },
+        { label: "Parameter", color: parameterColor },
+      ];
+
+      const keyContainer = document.getElementById('key-container');
+      const key = d3.select(keyContainer)
+        .selectAll(".key-item")
+        .data(keyData)
+        .enter()
+        .append("div")
+        .attr("class", "key-item");
+
+      key.append("div")
+        .attr("class", "key-color")
+        .style("background-color", d => d.color);
+
+      key.append("div")
+        .text(d => d.label);
     });
   </script>
 </body>
