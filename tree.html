@@ -32,11 +32,14 @@
         name: "Uganda",
         children: Array.from(nestedData, ([district, values]) => ({
           name: district,
-          children: Array.from(d3.group(values, d => d.village), ([village, villageValues]) => ({
+          children: Array.from(d3.group(values, d => d.Village), ([village, villageValues]) => ({
             name: village,
             children: villageValues.map(entry => ({
               name: entry.Parameter,
-              ecoli: +entry.ecoli
+              ecoli: +entry.ecoli,
+              ph: +entry.ph,
+              turbidity: +entry.turbidity,
+              electricalConductivity: +entry.electricalConductivity
             }))
           }))
         }))
