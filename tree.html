@@ -5,45 +5,13 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     /* Add any custom styles here */
-    .key {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      margin-bottom: 10px;
-    }
-    
-    .key-circle {
-      width: 12px;
-      height: 12px;
-      margin-right: 5px;
-    }
-    
-    .key-text {
-      font-size: 12px;
-    }
   </style>
 </head>
 <body>
-  <div class="key">
-    <div class="key-circle" style="background-color: #1f77b4;"></div>
-    <div class="key-text">Root</div>
-  </div>
-  <div class="key">
-    <div class="key-circle" style="background-color: #ff7f0e;"></div>
-    <div class="key-text">District</div>
-  </div>
-  <div class="key">
-    <div class="key-circle" style="background-color: #2ca02c;"></div>
-    <div class="key-text">Village</div>
-  </div>
-  <div class="key">
-    <div class="key-circle" style="background-color: #d62728;"></div>
-    <div class="key-text">Parameter</div>
-  </div>
   <div id="chart-container"></div>
 
   <script>
-    const margin = { top: 50, right: 90, bottom: 30, left: 90 };
+    const margin = { top: 20, right: 90, bottom: 30, left: 90 };
     const width = 960;
     const dx = 10;
     const dy = width / 6;
@@ -55,14 +23,39 @@
       .x(d => d.y)
       .y(d => d.x);
 
-    // ...
-
     d3.csv("data.csv").then(function(data) {
       // Data preprocessing
-      // ...
+      console.log("Raw data:", data);
+      const nestedData = d3.group(data, d => d.District);
+      console.log("Nested data:", nestedData); 
+      const root = {
+        name: "Uganda",
+        children: Array.from(nestedData, ([district, values]) => ({
+          name: district,
+          children: Array.from(d3.group(values, d => d.village), ([village, villageValues]) => ({
+            name: village,
+            children: [
+              { name: "ecoli", value: villageValues.find(entry => entry.Parameter === "ecoli")?.Value || 0 },
+              { name: "pH", value: villageValues.find(entry => entry.Parameter === "pH")?.Value || 0 },
+              { name: "turbidity", value: villageValues.find(entry => entry.Parameter === "turbidity")?.Value || 0 }
+            ]
+          }))
+        }))
+      };
+
 
       const chart = () => {
-        // ...
+        const rootHierarchy = d3.hierarchy(root);
+
+        rootHierarchy.x0 = dy / 2;
+        rootHierarchy.y0 = 0;
+        rootHierarchy.descendants().forEach((d, i) => {
+          d.id = i;
+          d._children = d.children;
+          if (d.depth > 2) {
+            d.children = null;
+          }
+        });
 
         const svg = d3.create("svg")
           .attr("viewBox", [-margin.left, -margin.top, width, dx])
@@ -71,6 +64,7 @@
 
         const gLink = svg.append("g")
           .attr("fill", "none")
+          .attr("stroke", "#555")
           .attr("stroke-opacity", 0.4)
           .attr("stroke-width", 1.5);
 
@@ -78,29 +72,127 @@
           .attr("cursor", "pointer")
           .attr("pointer-events", "all");
 
-        // ...
+        function update(event, source) {
+          const duration = event?.altKey ? 2500 : 250;
+          const nodes = rootHierarchy.descendants().reverse();
+          const links = rootHierarchy.links();
 
-        // Update the links...
-        const links = rootHierarchy.links(); // Define the links variable
+          // Compute the new tree layout.
+          tree(rootHierarchy);
 
-        const link = gLink.selectAll("path")
-          .data(links, d => d.target.id);
+          let left = rootHierarchy;
+          let right = rootHierarchy;
+          rootHierarchy.eachBefore(node => {
+            if (node.x < left.x) left = node;
+            if (node.x > right.x) right = node;
+          });
 
-        // Enter any new links at the parent's previous position.
-        const linkEnter = link.enter().append("path")
-          .attr("d", d => {
-            const o = { x: source.x0, y: source.y0 };
-            return diagonal({ source: o, target: o });
+          const height = right.x - left.x + margin.top + margin.bottom;
+
+          const transition = svg.transition()
+            .duration(duration)
+            .attr("viewBox", [-margin.left, left.x - margin.top, width, height])
+            .tween("resize", window.ResizeObserver ? null : () => () => svg.dispatch("toggle"));
+
+          // Update the nodes...
+          const node = gNode.selectAll("g")
+            .data(nodes, d => d.id);
+
+          // Enter any new nodes at the parent's previous position.
+          const nodeEnter = node.enter().append("g")
+            .attr("transform", d => `translate(${source.y0},${source.x0})`)
+            .attr("fill-opacity", 0)
+            .attr("stroke-opacity", 0)
+            .on("click", (event, d) => {
+              d.children = d.children ? null : d._children;
+              update(event, d);
+            });
+
+          nodeEnter.append("circle")
+            .attr("r", 2.5)
+            .attr("fill", d => d._children ? "#555" : d.data.children ? "#999" : "#777")
+            .attr("stroke-width", 10);
+
+          // ...
+        
+        function getParameterValues(node) {
+          if (node.depth === 3 && node.data.children) {
+            const parameterValues = node.data.children.map(child => `${child.name}=${child.value}`);
+            return parameterValues.join(", ");
+          } else if (node.depth === 4 && node.parent.data.children) {
+            const parameterValues = node.parent.data.children.map(child => `${child.name}=${child.value}`);
+            return parameterValues.join(", ");
+          }
+          return "";
+        }
+        
+        nodeEnter.append("text")
+          .attr("dy", "0.31em")
+          .attr("x", d => d._children ? -6 : 6)
+          .attr("text-anchor", d => d._children ? "end" : "start")
+          .text(d => {
+            const parameterValues = getParameterValues(d);
+            return parameterValues !== "" ? parameterValues : d.data.name;
           })
-          .attr("stroke", d => colorScale(d.target.depth)) // Set the stroke color based on the target node's depth
-          .attr("stroke-opacity", 0.4)
-          .attr("stroke-width", 1.5);
-
+          .clone(true).lower()
+          .attr("stroke-linejoin", "round")
+          .attr("stroke-width", 3)
+          .attr("stroke", "white");
+        
         // ...
 
-        // Append the SVG to the container
-        const container = document.getElementById('chart-container');
-        container.parentNode.insertBefore(svg.node(), container);
+          // Transition nodes to their new position.
+          const nodeUpdate = node.merge(nodeEnter).transition(transition)
+            .attr("transform", d => `translate(${d.y},${d.x})`)
+            .attr("fill-opacity", 1)
+            .attr("stroke-opacity", 1);
+
+          // Transition exiting nodes to the parent's new position.
+          const nodeExit = node.exit().transition(transition).remove()
+            .attr("transform", d => `translate(${source.y},${source.x})`)
+            .attr("fill-opacity", 0)
+            .attr("stroke-opacity", 0);
+
+          // Update the links...
+          const link = gLink.selectAll("path")
+            .data(links, d => d.target.id);
+
+          // Enter any new links at the parent's previous position.
+          const linkEnter = link.enter().append("path")
+            .attr("d", d => {
+              const o = { x: source.x0, y: source.y0 };
+              return diagonal({ source: o, target: o });
+            });
+
+          // Transition links to their new position.
+          link.merge(linkEnter).transition(transition)
+            .attr("d", diagonal);
+
+          // Transition exiting nodes to the parent's new position.
+          link.exit().transition(transition).remove()
+            .attr("d", d => {
+              const o = { x: source.x, y: source.y };
+              return diagonal({ source: o, target: o });
+            });
+
+          // Stash the old positions for transition.
+          rootHierarchy.eachBefore(d => {
+            d.x0 = d.x;
+            d.y0 = d.y;
+          });
+        }
+
+        // Collapse all nodes except the root and its immediate children.
+        rootHierarchy.each((d) => {
+          if (d.depth > 1) {
+            d._children = d.children;
+            d.children = null;
+          }
+        });
+
+        update(null, rootHierarchy);
+
+        return svg.node();
       };
 
       const container = document.getElementById('chart-container');
