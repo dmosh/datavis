@@ -144,69 +144,42 @@
           const duration = event?.altKey ? 2500 : 250;
           const nodes = rootHierarchy.descendants().reverse();
           const links = rootHierarchy.links();
-        
+
           // Compute the new tree layout.
           tree(rootHierarchy);
-        
+
           let left = rootHierarchy;
           let right = rootHierarchy;
           rootHierarchy.eachBefore(node => {
-            if (node.depth > 0) { // Collapse district nodes on load
-              node._children = node.children;
-              node.children = null;
-            }
+            if (node.x < left.x) left = node;
+            if (node.x > right.x) right = node;
           });
-        
+
           const height = right.x - left.x + margin.top + margin.bottom + dx; // Add dx to accommodate the node size
-        
+
           const transition = svg.transition()
             .duration(duration)
             .attr("viewBox", [-margin.left, left.x - margin.top, width, height])
             .tween("resize", window.ResizeObserver ? null : () => () => svg.dispatch("toggle"));
-        
+
           // Update the nodes...
           const node = gNode.selectAll("g")
             .data(nodes, d => d.id);
-        
+
           // Enter any new nodes at the parent's previous position.
           const nodeEnter = node.enter().append("g")
             .attr("transform", d => `translate(${source.y0},${source.x0})`)
             .attr("fill-opacity", 0)
             .attr("stroke-opacity", 0)
             .on("click", (event, d) => {
-              if (d.depth === 1) {
-                d.children = d.children ? null : d._children;
-                update(event, d);
-              } else if (d.depth === 2) {
-                d._children = d.children;
-                d.children = null;
-                update(event, d);
-              }
+              d.children = d.children ? null : d._children;
+              update(event, d);
             });
+
           nodeEnter.merge(node) // Update existing nodes as well
             .transition(transition)
-            .attr("transform", d => `translate(${d.y},${d.x})`)
-            .on("click", (event, d) => {
-              if (d.depth === 1) { // Expand or collapse district nodes when clicked
-                if (d.children) {
-                  d._children = d.children;
-                  d.children = null;
-                } else {
-                  d.children = d._children;
-                  d._children = null;
-                }
-                update(event, d);
-              } else if (d.depth === 2) { // Expand or collapse village nodes when clicked
-                if (d.children) {
-                  d._children = d.children;
-                  d.children = null;
-                } else {
-                  d.children = d._children;
-                  d._children = null;
-                }
-                update(event, d);
-              }
-            });
+            .attr("transform", d => `translate(${d.y},${d.x})`);
+
           nodeEnter.append("circle")
             .attr("r", 6)
             .attr("class", d => {
