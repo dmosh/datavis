@@ -50,7 +50,9 @@
         rootHierarchy.descendants().forEach((d, i) => {
           d.id = i;
           d._children = d.children;
-          if (d.depth && d.data.name && d.data.name.length !== 7) d.children = null;
+          if (d.depth > 2) {
+            d.children = null;
+          }
         });
 
         const svg = d3.create("svg")
@@ -159,6 +161,14 @@
             d.y0 = d.y;
           });
         }
+
+        // Collapse all nodes except the root and its immediate children.
+        rootHierarchy.each((d) => {
+          if (d.depth > 1) {
+            d._children = d.children;
+            d.children = null;
+          }
+        });
 
         update(null, rootHierarchy);
 
