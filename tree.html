@@ -151,8 +151,10 @@
           let left = rootHierarchy;
           let right = rootHierarchy;
           rootHierarchy.eachBefore(node => {
-            if (node.x < left.x) left = node;
-            if (node.x > right.x) right = node;
+            if (node.depth > 0) { // Collapse district nodes on load
+              node._children = node.children;
+              node.children = null;
+            }
           });
         
           const height = right.x - left.x + margin.top + margin.bottom + dx; // Add dx to accommodate the node size
@@ -183,7 +185,13 @@
             });
           nodeEnter.merge(node) // Update existing nodes as well
             .transition(transition)
-            .attr("transform", d => `translate(${d.y},${d.x})`);
+            .attr("transform", d => `translate(${d.y},${d.x})`)
+            .on("click", (event, d) => {
+              if (d.depth > 2) {
+                d.children = d.children ? null : d._children;
+                update(event, d);
+              }
+            });
 
           nodeEnter.append("circle")
             .attr("r", 6)
