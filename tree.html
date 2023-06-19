@@ -18,6 +18,11 @@
 
     const tree = d3.tree().nodeSize([dx, dy]);
 
+    // Define the diagonal function
+    const diagonal = d3.linkVertical()
+      .x(d => d.y)
+      .y(d => d.x);
+
     d3.csv("data.csv").then(function(data) {
       // Data preprocessing
       console.log("Raw data:", data);
