@@ -175,6 +175,10 @@
               if (d.depth === 1) {
                 d.children = d.children ? null : d._children;
                 update(event, d);
+              } else if (d.depth === 2) {
+                d._children = d.children;
+                d.children = null;
+                update(event, d);
               }
             });
           nodeEnter.merge(node) // Update existing nodes as well
