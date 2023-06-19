@@ -144,7 +144,7 @@
           const duration = event?.altKey ? 2500 : 250;
           const nodes = rootHierarchy.descendants().reverse();
           const links = rootHierarchy.links();
-
+        
           // Compute the new tree layout.
           tree(rootHierarchy);
         
@@ -172,7 +172,7 @@
             .attr("fill-opacity", 0)
             .attr("stroke-opacity", 0)
             .on("click", (event, d) => {
-              if (d.depth >= 2) {
+              if (d.depth === 1) {
                 d.children = d.children ? null : d._children;
                 update(event, d);
               }
