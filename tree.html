@@ -217,7 +217,9 @@
               const o = { x: source.x0, y: source.y0 };
               return diagonal({ source: o, target: o });
             })
-            .attr("class", "link");
+            .attr("class", "link")
+            .attr("stroke", d => d.target.data.color); // Set the stroke color to the target node's color
+
 
           // Transition links to their new position.
           link.merge(linkEnter).transition(transition)
