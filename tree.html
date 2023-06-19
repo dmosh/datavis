@@ -96,14 +96,17 @@
       console.log("Nested data:", nestedData); 
       const root = {
         name: "Uganda",
+        color: "#fca903", // Set the color for the root node
         children: Array.from(nestedData, ([district, values]) => ({
           name: district,
+          color: "#00b8d4", // Set the color for the district node
           children: Array.from(d3.group(values, d => d.village), ([village, villageValues]) => ({
             name: village,
+            color: "#7fb800", // Set the color for the village node
             children: [
-              { name: "ecoli", value: villageValues.find(entry => entry.Parameter === "ecoli")?.Value || 0 },
-              { name: "pH", value: villageValues.find(entry => entry.Parameter === "pH")?.Value || 0 },
-              { name: "turbidity", value: villageValues.find(entry => entry.Parameter === "turbidity")?.Value || 0 }
+              { name: "ecoli", value: villageValues.find(entry => entry.Parameter === "ecoli")?.Value || 0, color: "#ff4081" }, // Set the color for the parameter node
+              { name: "pH", value: villageValues.find(entry => entry.Parameter === "pH")?.Value || 0, color: "#ff4081" },
+              { name: "turbidity", value: villageValues.find(entry => entry.Parameter === "turbidity")?.Value || 0, color: "#ff4081" }
             ]
           }))
         }))
