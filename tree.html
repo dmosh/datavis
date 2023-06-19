@@ -135,7 +135,7 @@
                 if (d.data.children) {
                   const parameters = d.data.children
                     .filter(child => child.name !== undefined && child.value !== undefined)
-                    .map(child => child.name + ": " + child.value)
+                    .map(child => `${child.name}=${child.value}`)
                     .join(", ");
                   return parameters;
                 }
