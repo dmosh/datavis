@@ -35,9 +35,9 @@
           children: Array.from(d3.group(values, d => d.village), ([village, villageValues]) => ({
             name: village,
             children: [
-              { name: "ecoli", value: villageValues.find(entry => entry.Parameter === "ecoli").Value },
-              { name: "pH", value: villageValues.find(entry => entry.Parameter === "pH").Value },
-              { name: "turbidity", value: villageValues.find(entry => entry.Parameter === "turbidity").Value }
+              { name: "ecoli", value: villageValues.find(entry => entry.Parameter === "ecoli")?.Value || 0 },
+              { name: "pH", value: villageValues.find(entry => entry.Parameter === "pH")?.Value || 0 },
+              { name: "turbidity", value: villageValues.find(entry => entry.Parameter === "turbidity")?.Value || 0 }
             ]
           }))
         }))
