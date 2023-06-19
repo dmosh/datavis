@@ -28,21 +28,31 @@
       console.log("Raw data:", data);
       const nestedData = d3.group(data, d => d.District);
       console.log("Nested data:", nestedData); 
+      const villageParams = Array.from(nestedData, ([district, values]) => ({
+        district,
+        villages: Array.from(d3.group(values, d => d.village), ([village, villageValues]) => ({
+          village,
+          parameters: [
+            { name: "ecoli", value: villageValues.find(entry => entry.Parameter === "ecoli")?.Value || 0 },
+            { name: "pH", value: villageValues.find(entry => entry.Parameter === "pH")?.Value || 0 },
+            { name: "turbidity", value: villageValues.find(entry => entry.Parameter === "turbidity")?.Value || 0 }
+          ]
+        }))
+      }));
+
       const root = {
         name: "Uganda",
-        children: Array.from(nestedData, ([district, values]) => ({
+        children: villageParams.map(({ district, villages }) => ({
           name: district,
-          children: Array.from(d3.group(values, d => d.village), ([village, villageValues]) => ({
+          children: villages.map(({ village, parameters }) => ({
             name: village,
-            children: [
-              { name: "ecoli", value: villageValues.find(entry => entry.Parameter === "ecoli")?.Value || 0 },
-              { name: "pH", value: villageValues.find(entry => entry.Parameter === "pH")?.Value || 0 },
-              { name: "turbidity", value: villageValues.find(entry => entry.Parameter === "turbidity")?.Value || 0 }
-            ]
+            children: parameters.map(parameter => ({
+              name: parameter.name,
+              value: parameter.value
+            }))
           }))
         }))
       };
-
 
       const chart = () => {
         const rootHierarchy = d3.hierarchy(root);
@@ -114,32 +124,32 @@
             .attr("stroke-width", 10);
 
           // ...
-        
-        function getParameterValues(node) {
-          if (node.depth === 3 && node.data.children) {
-            const parameterValues = node.data.children.map(child => `${child.name}=${child.value}`);
-            return parameterValues.join(", ");
-          } else if (node.depth === 4 && node.parent.data.children) {
-            const parameterValues = node.parent.data.children.map(child => `${child.name}=${child.value}`);
-            return parameterValues.join(", ");
+
+          function getParameterValues(node) {
+            if (node.depth === 3 && node.data.children) {
+              const parameterValues = node.data.children.map(child => `${child.name}=${child.value}`);
+              return parameterValues.join(", ");
+            } else if (node.depth === 4 && node.parent.data.children) {
+              const parameterValues = node.parent.data.children.map(child => `${child.name}=${child.value}`);
+              return parameterValues.join(", ");
+            }
+            return "";
           }
-          return "";
-        }
-        
-        nodeEnter.append("text")
-          .attr("dy", "0.31em")
-          .attr("x", d => d._children ? -6 : 6)
-          .attr("text-anchor", d => d._children ? "end" : "start")
-          .text(d => {
-            const parameterValues = getParameterValues(d);
-            return parameterValues !== "" ? parameterValues : d.data.name;
-          })
-          .clone(true).lower()
-          .attr("stroke-linejoin", "round")
-          .attr("stroke-width", 3)
-          .attr("stroke", "white");
-        
-        // ...
+
+          nodeEnter.append("text")
+            .attr("dy", "0.31em")
+            .attr("x", d => d._children ? -6 : 6)
+            .attr("text-anchor", d => d._children ? "end" : "start")
+            .text(d => {
+              const parameterValues = getParameterValues(d);
+              return parameterValues !== "" ? parameterValues : d.data.name;
+            })
+            .clone(true).lower()
+            .attr("stroke-linejoin", "round")
+            .attr("stroke-width", 3)
+            .attr("stroke", "white");
+
+          // ...
 
           // Transition nodes to their new position.
           const nodeUpdate = node.merge(nodeEnter).transition(transition)
