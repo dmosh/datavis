@@ -48,30 +48,7 @@
 </head>
 <body>
   <div id="key-container">
-    <div class="key-item">
-      <svg width="10" height="10">
-        <circle class="circle-root" cx="5" cy="5" r="4.5"></circle>
-      </svg>
-      Root Node
-    </div>
-    <div class="key-item">
-      <svg width="10" height="10">
-        <circle class="circle-district" cx="5" cy="5" r="4.5"></circle>
-      </svg>
-      District Node
-    </div>
-    <div class="key-item">
-      <svg width="10" height="10">
-        <circle class="circle-village" cx="5" cy="5" r="4.5"></circle>
-      </svg>
-      Village Node
-    </div>
-    <div class="key-item">
-      <svg width="10" height="10">
-        <circle class="circle-parameter" cx="5" cy="5" r="4.5"></circle>
-      </svg>
-      Parameter Node
-    </div>
+    <!-- Key items -->
   </div>
 
   <div id="chart-container"></div>
@@ -91,9 +68,9 @@
 
     d3.csv("data.csv").then(function(data) {
       // Data preprocessing
-      console.log("Raw data:", data);
+
       const nestedData = d3.group(data, d => d.District);
-      console.log("Nested data:", nestedData); 
+
       const root = {
         name: "Uganda",
         color: "#fca903", // Set the color for the root node
@@ -111,7 +88,6 @@
           }))
         }))
       };
-
 
       const chart = () => {
         const rootHierarchy = d3.hierarchy(root);
@@ -172,7 +148,6 @@
             .attr("fill-opacity", 0)
             .attr("stroke-opacity", 0)
             .on("click", (event, d) => {
-              if (d.depth === 0) return; // Prevent collapse/expand for the root node
               d.children = d.children ? null : d._children;
               update(event, d);
             });
@@ -231,12 +206,16 @@
             .attr("d", d => {
               const o = { x: source.x0, y: source.y0 };
               return diagonal({ source: o, target: o });
-            });
-
+            })
+            .attr("stroke", d => d.target.data.color) // Set the stroke color to the target node's color
+            .attr("stroke-opacity", 0.4)
+            .attr("stroke-width", 1.5);
+          
           // Transition links to their new position.
           link.merge(linkEnter).transition(transition)
-            .attr("d", diagonal);
-
+            .attr("d", diagonal)
+            .attr("stroke", d => d.target.data.color); // Update the stroke color during transition
+          
           // Transition exiting nodes to the parent's new position.
           link.exit().transition(transition).remove()
             .attr("d", d => {
@@ -251,11 +230,21 @@
           });
         }
 
+        // Collapse all nodes except the root and its immediate children.
+        rootHierarchy.each((d) => {
+          if (d.depth > 0) {
+            d._children = d.children;
+            d.children = null;
+          }
+        });
+
         update(null, rootHierarchy);
+
         return svg.node();
       };
 
-      document.getElementById("chart-container").appendChild(chart());
+      const container = document.getElementById('chart-container');
+      container.appendChild(chart());
     });
   </script>
 </body>
