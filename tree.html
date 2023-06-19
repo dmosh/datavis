@@ -27,12 +27,12 @@
       // Data preprocessing
       console.log("Raw data:", data);
       const nestedData = d3.group(data, d => d.District);
-      console.log("Nested data:", nestedData); 
+      console.log("Nested data:", nestedData);
       const root = {
         name: "Uganda",
         children: Array.from(nestedData, ([district, values]) => ({
           name: district,
-          children: Array.from(d3.group(values, d => d.Village), ([village, villageValues]) => ({
+          children: Array.from(d3.group(values, d => d.village), ([village, villageValues]) => ({
             name: village,
             children: villageValues.map(entry => ({
               name: entry.Parameter,
