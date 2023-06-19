@@ -207,7 +207,7 @@
 
         // Lazily load children for the specified node.
         function loadChildren(node) {
-          const values = nestedData.get(node.data.name);
+          const values = nestedData.get(node.data.children[0].name);
           if (values && !node.data.children) {
             node.data.children = values.map(value => ({
               name: value.Village,
