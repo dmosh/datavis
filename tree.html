@@ -31,14 +31,7 @@
       const root = {
         name: "Uganda",
         children: Array.from(nestedData, ([district, values]) => ({
-          name: district,
-          children: Array.from(d3.group(values, d => d.village), ([village, villageValues]) => ({
-            name: village,
-            children: villageValues.map(entry => ({
-              name: entry.Parameter,
-              ecoli: +entry.ecoli
-            }))
-          }))
+          name: district
         }))
       };
 
@@ -102,58 +95,31 @@
             .attr("fill-opacity", 0)
             .attr("stroke-opacity", 0)
             .on("click", (event, d) => {
-              if (d.children) {
-                d._children = d.children;
-                d.children = null;
-              } else {
+              if (!d.children) {
                 d.children = d._children;
-                d._children = null;
+              } else {
+                d.children = null;
               }
               update(event, d);
             });
 
           nodeEnter.append("circle")
             .attr("r", 2.5)
-            .attr("fill", d => {
-              if (d.depth === 1) {
-                return "#555"; // Immediate children after the root are enabled
-              } else {
-                return "#999"; // Rest of the nodes are collapsed and disabled initially
-              }
-            })
+            .attr("fill", "#555")
             .attr("stroke-width", 10)
-            .style("pointer-events", d => {
-              if (d.depth === 1) {
-                return "auto"; // Enable pointer events for immediate children after the root
-              } else {
-                return "none"; // Disable pointer events for other nodes
-              }
-            });
+            .style("pointer-events", "auto");
 
           nodeEnter.append("text")
             .attr("dy", "0.31em")
-            .attr("x", d => d._children ? -6 : 6)
-            .attr("text-anchor", d => d._children ? "end" : "start")
+            .attr("x", -6)
+            .attr("text-anchor", "end")
             .text(d => d.data.name)
-            .style("fill", d => {
-              if (d.depth === 1) {
-                return "#000"; // Immediate children after the root are enabled
-              } else {
-                return "#999"; // Rest of the nodes are collapsed and disabled initially
-              }
-            })
-            .style("pointer-events", d => {
-              if (d.depth === 1) {
-                return "auto"; // Enable pointer events for immediate children after the root
-              } else {
-                return "none"; // Disable pointer events for other nodes
-              }
-            })
+            .style("fill", "#000")
+            .style("pointer-events", "auto")
             .clone(true).lower()
             .attr("stroke-linejoin", "round")
             .attr("stroke-width", 3)
             .attr("stroke", "white");
-
 
           // Transition nodes to their new position.
           const nodeUpdate = node.merge(nodeEnter).transition(transition)
@@ -196,9 +162,9 @@
           });
         }
 
-        // Collapse all nodes except the root and its immediate children.
+        // Collapse all nodes except the root.
         rootHierarchy.each((d) => {
-          if (d.depth > 1) {
+          if (d.depth > 0) {
             d._children = d.children;
             d.children = null;
           }
