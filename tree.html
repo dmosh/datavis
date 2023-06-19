@@ -55,6 +55,9 @@
 
   <script>
     const margin = { top: 20, right: 90, bottom: 30, left: 90 };
+    const width = 960;
+    const dx = 50; // Set the horizontal distance between nodes
+    const dy = 150; // Set the vertical distance between nodes
 
     const tree = d3.tree().nodeSize([dx, dy]);
 
@@ -99,17 +102,8 @@
           }
         });
 
-        const container = document.getElementById('chart-container');
-        const width = container.clientWidth;
-        
-        const dx = 50; // Set the horizontal distance between nodes
-        const dy = 150; // Set the vertical distance between nodes
-
-        const nodesCount = rootHierarchy.descendants().length;
-        const height = nodesCount * dy + margin.top + margin.bottom;
-
         const svg = d3.create("svg")
-          .attr("viewBox", [-margin.left, -margin.top, width, height])
+          .attr("viewBox", [-margin.left, -margin.top, width, dx])
           .style("font", "10px sans-serif")
           .style("user-select", "none");
 
@@ -136,6 +130,8 @@
             if (node.x < left.x) left = node;
             if (node.x > right.x) right = node;
           });
+
+          const height = right.x - left.x + margin.top + margin.bottom + dx; // Add dx to accommodate the node size
 
           const transition = svg.transition()
             .duration(duration)
@@ -189,25 +185,37 @@
             .attr("stroke", "white");
 
           // Transition nodes to their new position.
-          node.merge(nodeEnter).transition(transition)
+          const nodeUpdate = node.merge(nodeEnter).transition(transition)
+            .attr("transform", d => `translate(${d.y},${d.x})`)
             .attr("fill-opacity", 1)
             .attr("stroke-opacity", 1);
 
-          // Update the links...
-          const link = gLink.selectAll("path")
-            .data(links, d => d.target.id);
+          // Transition exiting nodes to the parent's new position.
+          const nodeExit = node.exit().transition(transition).remove()
+            .attr("transform", d => `translate(${source.y},${source.x})`)
+            .attr("fill-opacity", 0)
+            .attr("stroke-opacity", 0);
 
+          // Update the links...
+          const link = gLink.selectAll("path.link")
+            .data(links, d => d.target.id);
+          
           // Enter any new links at the parent's previous position.
           const linkEnter = link.enter().append("path")
+            .attr("class", "link")
             .attr("d", d => {
               const o = { x: source.x0, y: source.y0 };
               return diagonal({ source: o, target: o });
-            });
-
+            })
+            .attr("stroke", d => d.target.data.color) // Set the stroke color to the target node's color
+            .attr("stroke-opacity", 0.4)
+            .attr("stroke-width", 1.5);
+          
           // Transition links to their new position.
           link.merge(linkEnter).transition(transition)
-            .attr("d", diagonal);
-
+            .attr("d", diagonal)
+            .attr("stroke", d => d.target.data.color); // Update the stroke color during transition
+          
           // Transition exiting nodes to the parent's new position.
           link.exit().transition(transition).remove()
             .attr("d", d => {
@@ -222,39 +230,21 @@
           });
         }
 
+        // Collapse all nodes except the root and its immediate children.
+        rootHierarchy.each((d) => {
+          if (d.depth > 0) {
+            d._children = d.children;
+            d.children = null;
+          }
+        });
+
         update(null, rootHierarchy);
 
-        container.innerHTML = '';
-        container.appendChild(svg.node());
-
-        const keyContainer = document.getElementById('key-container');
-
-        function createKeyItem(color, text) {
-          const item = document.createElement('div');
-          item.classList.add('key-item');
-          item.innerHTML = `
-            <svg width="10" height="10">
-              <circle cx="5" cy="5" r="5" fill="${color}" />
-            </svg>
-            <span>${text}</span>
-          `;
-          return item;
-        }
-
-        const rootKeyItem = createKeyItem("#fca903", "Uganda");
-        keyContainer.appendChild(rootKeyItem);
-
-        const districtKeyItem = createKeyItem("#00b8d4", "District");
-        keyContainer.appendChild(districtKeyItem);
-
-        const villageKeyItem = createKeyItem("#7fb800", "Village");
-        keyContainer.appendChild(villageKeyItem);
-
-        const parameterKeyItem = createKeyItem("#ff4081", "Parameter");
-        keyContainer.appendChild(parameterKeyItem);
+        return svg.node();
       };
 
-      chart();
+      const container = document.getElementById('chart-container');
+      container.appendChild(chart());
     });
   </script>
 </body>
