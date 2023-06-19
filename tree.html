@@ -132,12 +132,16 @@
             .text(d => {
               if (d.depth === 3) {
                 // Display parameters for village nodes
-                const parameters = d.data.children.map(child => child.name + ": " + child.value).join(", ");
-                return parameters;
-              } else {
-                // Display district and village names
-                return d.data.name;
+                if (d.data.children) {
+                  const parameters = d.data.children
+                    .filter(child => child.name !== undefined && child.value !== undefined)
+                    .map(child => child.name + ": " + child.value)
+                    .join(", ");
+                  return parameters;
+                }
               }
+              // Display district and village names
+              return d.data.name;
             })
             .clone(true).lower()
             .attr("stroke-linejoin", "round")
