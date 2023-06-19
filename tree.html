@@ -27,12 +27,18 @@
       // Data preprocessing
       console.log("Raw data:", data);
       const nestedData = d3.group(data, d => d.District);
-      console.log("Nested data:", nestedData); 
+      console.log("Nested data:", nestedData);
       const root = {
         name: "Uganda",
         children: Array.from(nestedData, ([district, values]) => ({
-          name: district
-        }))
+          name: district,
+          children: [{
+            name: "Loading...", // Placeholder node
+            children: null,
+          }],
+          _values: values, // Store values for lazy loading
+          _children: null, // Stores the actual children after loading
+        })),
       };
 
       const chart = () => {
@@ -95,27 +101,58 @@
             .attr("fill-opacity", 0)
             .attr("stroke-opacity", 0)
             .on("click", (event, d) => {
-              if (!d.children) {
+              if (d._children) {
                 d.children = d._children;
+                d._children = null;
               } else {
+                d._children = d.children;
                 d.children = null;
+                loadChildren(d);
               }
               update(event, d);
             });
 
           nodeEnter.append("circle")
             .attr("r", 2.5)
-            .attr("fill", "#555")
+            .attr("fill", d => {
+              if (d.depth === 0) {
+                return "#555"; // Root node
+              } else if (d._children) {
+                return "#555"; // Expanded node
+              } else {
+                return "#999"; // Collapsed node
+              }
+            })
             .attr("stroke-width", 10)
-            .style("pointer-events", "auto");
+            .style("pointer-events", d => {
+              if (d.depth === 0) {
+                return "auto"; // Enable pointer events for root node
+              } else {
+                return "none"; // Disable pointer events for other nodes
+              }
+            });
 
           nodeEnter.append("text")
             .attr("dy", "0.31em")
-            .attr("x", -6)
-            .attr("text-anchor", "end")
+            .attr("x", d => d._children ? -6 : 6)
+            .attr("text-anchor", d => d._children ? "end" : "start")
             .text(d => d.data.name)
-            .style("fill", "#000")
-            .style("pointer-events", "auto")
+            .style("fill", d => {
+              if (d.depth === 0) {
+                return "#000"; // Root node
+              } else if (d._children) {
+                return "#000"; // Expanded node
+              } else {
+                return "#999"; // Collapsed node
+              }
+            })
+            .style("pointer-events", d => {
+              if (d.depth === 0) {
+                return "auto"; // Enable pointer events for root node
+              } else {
+                return "none"; // Disable pointer events for other nodes
+              }
+            })
             .clone(true).lower()
             .attr("stroke-linejoin", "round")
             .attr("stroke-width", 3)
@@ -162,21 +199,23 @@
           });
         }
 
-        // Collapse all nodes except the root.
-        rootHierarchy.each((d) => {
-          if (d.depth > 0) {
-            d._children = d.children;
-            d.children = null;
+        // Lazily load children for the specified node.
+        function loadChildren(node) {
+          const values = node.data._values;
+          if (values && !node.data.children) {
+            node.data.children = values.map(value => ({
+              name: value.Village,
+            }));
           }
-        });
+        }
 
+        root.children.forEach(loadChildren);
         update(null, rootHierarchy);
 
         return svg.node();
       };
 
-      const container = document.getElementById('chart-container');
-      container.appendChild(chart());
+      document.getElementById("chart-container").appendChild(chart());
     });
   </script>
 </body>
