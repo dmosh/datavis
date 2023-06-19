@@ -114,34 +114,32 @@
             .attr("stroke-width", 10);
 
           // ...
-
-          nodeEnter.append("text")
-            .attr("dy", "0.31em")
-            .attr("x", d => d._children ? -6 : 6)
-            .attr("text-anchor", d => d._children ? "end" : "start")
-            .text(d => {
-              if (d.depth === 3) {
-                // Display parameters for village nodes
-                if (d.data.children) {
-                  const parameters = d.data.children
-                    .filter(child => child.name !== undefined && child.children !== undefined)
-                    .map(child => {
-                      const parameterValues = child.children.map(grandchild => `${grandchild.name}=${grandchild.value}`);
-                      return parameterValues.join(", ");
-                    })
-                    .join(" | ");
-                  return parameters;
-                }
-              }
-              // Display district and village names
-              return d.data.name;
-            })
-            .clone(true).lower()
-            .attr("stroke-linejoin", "round")
-            .attr("stroke-width", 3)
-            .attr("stroke", "white");
-          
-          // ...
+        
+        function getParameterValues(node) {
+          if (node.depth === 3 && node.data.children) {
+            const parameterValues = node.data.children.map(child => `${child.name}=${child.value}`);
+            return parameterValues.join(", ");
+          } else if (node.depth === 4 && node.parent.data.children) {
+            const parameterValues = node.parent.data.children.map(child => `${child.name}=${child.value}`);
+            return parameterValues.join(", ");
+          }
+          return "";
+        }
+        
+        nodeEnter.append("text")
+          .attr("dy", "0.31em")
+          .attr("x", d => d._children ? -6 : 6)
+          .attr("text-anchor", d => d._children ? "end" : "start")
+          .text(d => {
+            const parameterValues = getParameterValues(d);
+            return parameterValues !== "" ? parameterValues : d.data.name;
+          })
+          .clone(true).lower()
+          .attr("stroke-linejoin", "round")
+          .attr("stroke-width", 3)
+          .attr("stroke", "white");
+        
+        // ...
 
           // Transition nodes to their new position.
           const nodeUpdate = node.merge(nodeEnter).transition(transition)
