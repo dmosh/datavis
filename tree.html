@@ -79,8 +79,8 @@
   <script>
     const margin = { top: 20, right: 90, bottom: 30, left: 90 };
     const width = 960;
-    const dx = 15;
-    const dy = width / 6;
+    const dx = 100; // Set the horizontal distance between nodes
+    const dy = 300; // Set the vertical distance between nodes
 
     const tree = d3.tree().nodeSize([dx, dy]);
 
@@ -155,7 +155,7 @@
             if (node.x > right.x) right = node;
           });
 
-          const height = right.x - left.x + margin.top + margin.bottom;
+          const height = right.x - left.x + margin.top + margin.bottom + dx; // Add dx to accommodate the node size
 
           const transition = svg.transition()
             .duration(duration)
@@ -175,6 +175,10 @@
               d.children = d.children ? null : d._children;
               update(event, d);
             });
+
+          nodeEnter.merge(node) // Update existing nodes as well
+            .transition(transition)
+            .attr("transform", d => `translate(${d.y},${d.x})`);
 
           nodeEnter.append("circle")
             .attr("r", 6)
