@@ -120,13 +120,10 @@
             .text(d => {
               if (d.depth === 3) {
                 // Display parameters for village nodes
-                const parameters = d.data.children.map(child => `${child.name}: ${child.value}`).join(", ");
+                const parameters = d.data.children.map(child => child.name + ": " + child.value).join(", ");
                 return parameters;
-              } else if (d.depth === 2) {
-                // Display village name
-                return d.data.name;
               } else {
-                // Display district name
+                // Display district and village names
                 return d.data.name;
               }
             })
