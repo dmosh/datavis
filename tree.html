@@ -118,7 +118,7 @@
             .attr("x", d => d._children ? -6 : 6)
             .attr("text-anchor", d => d._children ? "end" : "start")
             .text(d => {
-              if (d.depth === 3) {
+              if (d.depth === 3 && d.data.children) {
                 // Display parameters for village nodes
                 const parameters = d.data.children.map(child => child.name + ": " + child.value).join(", ");
                 return parameters;
