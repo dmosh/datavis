@@ -188,15 +188,25 @@
             .attr("transform", d => `translate(${d.y},${d.x})`)
             .on("click", (event, d) => {
               if (d.depth === 1) { // Expand or collapse district nodes when clicked
-                d.children = d.children ? null : d._children;
+                if (d.children) {
+                  d._children = d.children;
+                  d.children = null;
+                } else {
+                  d.children = d._children;
+                  d._children = null;
+                }
                 update(event, d);
               } else if (d.depth === 2) { // Expand or collapse village nodes when clicked
-                d._children = d.children;
-                d.children = null;
+                if (d.children) {
+                  d._children = d.children;
+                  d.children = null;
+                } else {
+                  d.children = d._children;
+                  d._children = null;
+                }
                 update(event, d);
               }
             });
-
           nodeEnter.append("circle")
             .attr("r", 6)
             .attr("class", d => {
