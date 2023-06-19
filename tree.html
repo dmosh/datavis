@@ -34,7 +34,7 @@
           name: district,
           children: Array.from(d3.group(values, d => d.village), ([village, villageValues]) => ({
             name: village,
-            children: villageValues.map(entry => ({
+            parameters: villageValues.map(entry => ({
               name: entry.Parameter,
               children: [
                 { name: "ecoli", value: +entry.ecoli },
@@ -46,7 +46,6 @@
         }))
       };
 
-
       const chart = () => {
         const rootHierarchy = d3.hierarchy(root);
 
@@ -55,7 +54,7 @@
         rootHierarchy.descendants().forEach((d, i) => {
           d.id = i;
           d._children = d.children;
-          if (d.depth > 2) {
+          if (d.depth > 1) {
             d.children = null;
           }
         });
@@ -107,7 +106,11 @@
             .attr("fill-opacity", 0)
             .attr("stroke-opacity", 0)
             .on("click", (event, d) => {
-              d.children = d.children ? null : d._children;
+              if (d.parameters) {
+                d.parameters = null; // Toggle parameter visibility
+              } else {
+                d.parameters = d.data.parameters;
+              }
               update(event, d);
             });
 
@@ -117,25 +120,23 @@
             .attr("stroke-width", 10);
 
           nodeEnter.append("text")
-            .attr("dy", "0.31em")
-            .attr("x", d => d._children ? -6 : 6)
-            .attr("text-anchor", d => d._children ? "end" : "start")
-            .text(d => {
-              if (d.depth === 3) {
-                // Display parameter names for leaves
-                return d.data.name;
-              } else if (d.depth === 2) {
-                // Display village name
-                return d.data.name;
-              } else {
-                // Display district name
-                return d.data.name;
-              }
-            })
-            .clone(true).lower()
-            .attr("stroke-linejoin", "round")
-            .attr("stroke-width", 3)
-            .attr("stroke", "white");
+          .attr("dy", "0.31em")
+          .attr("x", d => d._children ? -6 : 6)
+          .attr("text-anchor", d => d._children ? "end" : "start")
+          .text(d => {
+            if (d.depth === 2) {
+              // Display parameters for village nodes
+              const parameters = d.data.parameters.map(child => child.name).join(", ");
+              return parameters;
+            } else {
+              // Display district and village names
+              return d.data.name;
+            }
+          })
+          .clone(true).lower()
+          .attr("stroke-linejoin", "round")
+          .attr("stroke-width", 3)
+          .attr("stroke", "white");
 
 
           // Transition nodes to their new position.
