@@ -215,7 +215,7 @@
       // Process the filtered data here and return an array of objects with label, value, and color properties
       return filteredData.map(function(d) {
         return {
-          label: d.Village, // Use village names as labels
+          label: d.Village,
           value: +d[parameter]
         };
       });
