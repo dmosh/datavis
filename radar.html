@@ -115,6 +115,22 @@
       populateDistrictOptions(data);
       updateChart();
     });
+
+    // Function to populate the district options
+    function populateDistrictOptions(data) {
+      var districtSelect = d3.select("#district-select");
+    
+      // Get unique districts from the data
+      var districts = d3.map(data, function(d) { return d.District; }).keys();
+    
+      // Add options to the select element
+      districtSelect.selectAll("option")
+        .data(districts)
+        .enter()
+        .append("option")
+        .attr("value", function(d) { return d; })
+        .text(function(d) { return d; });
+    }
     
     // Function to update the chart based on the selected parameter and district
     function updateChart() {
