@@ -121,6 +121,9 @@
       var districtOptions = Array.from(new Set(data.map(d => d.District)));
       var select = d3.select("#district-select");
 
+      // Log the array of districts to the console
+      console.log("Districts:", districtOptions);
+
       select.selectAll("option")
         .data(districtOptions)
         .enter()
@@ -138,8 +141,6 @@
 
       // Process the data
       var processedData = processData(data, parameter, district);
-
-      console.log("Selected District:", district);
 
       // Prepare data for radar chart
       var chartData = {
