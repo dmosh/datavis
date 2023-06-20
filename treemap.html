@@ -63,15 +63,6 @@
   </nav>
   <div class="container">
     <h1>Water Quality Dashboard</h1>
-    <div id="district-filter">
-      <label for="district-select">Filter by District:</label>
-      <select id="district-select">
-        <option value="all" selected>All Districts</option>
-        <option value="District 1">District 1</option>
-        <option value="District 2">District 2</option>
-        <!-- Add options for each district -->
-      </select>
-    </div>
     <div id="chart-container">
       <h2 id="chart-title"></h2>
       <div id="chart"></div>
@@ -82,15 +73,18 @@
     d3.csv("data.csv").then(function(data) {
       console.log(data); // Check if the data is loaded correctly
 
+      // Get unique districts from the data
+      const districts = Array.from(new Set(data.map(d => d.District)));
+
       // Data preprocessing
       const nestedData = d3.group(data, d => d.District);
       console.log(nestedData); // Check if the data is grouped correctly
-
+    
       const root = {
         name: "Uganda",
-        children: Array.from(nestedData, ([district, values]) => ({
+        children: districts.map(district => ({
           name: district,
-          children: Array.from(values, entry => ({
+          children: Array.from(nestedData.get(district), entry => ({
             name: entry.Parameter,
             village: entry.village,
             ecoli: +entry.ecoli,
@@ -206,19 +200,6 @@
             "\nTurbidity: " + (isNaN(d.data.turbidity) ? "N/A" : d.data.turbidity)
           );
         });
-
-      // Filter by District
-      const districtSelect = document.getElementById('district-select');
-      districtSelect.addEventListener('change', function(event) {
-        const selectedDistrict = event.target.value;
-        if (selectedDistrict === 'all') {
-          node.attr('display', 'block');
-        } else {
-          node.attr('display', function(d) {
-            return d.parent.data.name === selectedDistrict ? 'block' : 'none';
-          });
-        }
-      });
     });
   </script>
 </body>
