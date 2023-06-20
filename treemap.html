@@ -67,34 +67,54 @@
       <h2 id="chart-title"></h2>
       <div id="chart"></div>
     </div>
+    <div id="filter-container">
+      <label for="district-select">Select District:</label>
+      <select id="district-select">
+        <option value="all">All Districts</option>
+      </select>
+    </div>
   </div>
 
   <script>
     d3.csv("data.csv").then(function(data) {
       console.log(data); // Check if the data is loaded correctly
 
-      const districts = [...new Set(data.map(d => d.District))];
+      // Data preprocessing
+      const nestedData = d3.group(data, d => d.District);
+      console.log(nestedData); // Check if the data is grouped correctly
 
-      // Create the district select dropdown
+      const districts = Array.from(nestedData.keys()); // Extract the district names
+
+      // Add district options to the select element
       const districtSelect = d3.select("#district-select");
-      districts.forEach(district => {
-        districtSelect
-          .append("option")
-          .attr("value", district)
-          .text(district);
-      });
+      districtSelect.selectAll("option")
+        .data(districts)
+        .enter()
+        .append("option")
+        .attr("value", function(d) {
+          return d;
+        })
+        .text(function(d) {
+          return d;
+        });
 
-      const createTreemap = selectedDistrict => {
+      // Chart dimensions
+      const width = 1000;
+      const height = 800;
+
+      // Create a D3.js treemap layout
+      const treemap = d3.treemap()
+        .size([width, height])
+        .padding(1);
+
+      // Function to update the treemap based on the selected district
+      function updateTreemap(selectedDistrict) {
         // Filter the data based on the selected district
         const filteredData = selectedDistrict === "all" ? data : data.filter(d => d.District === selectedDistrict);
 
-        // Data preprocessing
-        const nestedData = d3.group(filteredData, d => d.District);
-        console.log(nestedData); // Check if the data is grouped correctly
-
         const root = {
           name: "Uganda",
-          children: Array.from(nestedData, ([district, values]) => ({
+          children: Array.from(d3.group(filteredData, d => d.District), ([district, values]) => ({
             name: district,
             children: Array.from(values, entry => ({
               name: entry.Parameter,
@@ -106,17 +126,6 @@
             }))
           }))
         };
-
-        console.log(root);
-
-        // Chart dimensions
-        const width = 1000;
-        const height = 800;
-
-        // Create a D3.js treemap layout
-        const treemap = d3.treemap()
-          .size([width, height])
-          .padding(1);
 
         // Compute the treemap layout
         const rootHierarchy = d3.hierarchy(root)
@@ -134,7 +143,9 @@
 
         // Create the SVG container
         const svg = d3.select("#chart")
-          .append("svg")
+          .selectAll("svg")
+          .data([null])
+          .join("svg")
           .attr("viewBox", `0 0 ${width} ${height}`)
           .attr("preserveAspectRatio", "xMidYMid meet")
           .append("g")
@@ -146,13 +157,11 @@
         // Create the treemap nodes
         const node = svg.selectAll("g")
           .data(rootHierarchy.leaves())
-          .enter()
-          .append("g")
+          .join("g")
           .attr("transform", function(d) {
             return "translate(" + d.x0 + "," + d.y0 + ")";
           });
 
-        // Append the rectangle with the gradient fill
         node.append("rect")
           .attr("width", function(d) {
             return d.x1 - d.x0;
@@ -161,31 +170,79 @@
             return d.y1 - d.y0;
           })
           .attr("fill", function(d) {
-            return districtColors(d.parent.data.name);
+            return districtColors(d.parent.data.name); // Assign a color based on district name
           })
           .attr("stroke", "white");
 
-        // Append the text label
-        node.append("text")
-          .attr("x", 5)
-          .attr("y", 20)
-          .text(function(d) {
-            return d.data.name;
+        // Define a linear gradient for the rectangle fill
+        const gradient = node.append("linearGradient")
+          .attr("id", function(d, i) { return "gradient-" + i; })
+          .attr("gradientUnits", "userSpaceOnUse")
+          .attr("x1", 0)
+          .attr("y1", 0)
+          .attr("x2", 1)
+          .attr("y2", 1);
+
+        gradient.append("stop")
+          .attr("offset", "0%")
+          .attr("stop-color", "white");
+
+        gradient.append("stop")
+          .attr("offset", "100%")
+          .attr("stop-color", function(d) {
+            return districtColors(d.parent.data.name).darker(0.8); // Make the color slightly darker
           });
 
-        // Update the chart title
-        d3.select("#chart-title")
-          .text(selectedDistrict === "all" ? "Water Quality by District" : `Water Quality in ${selectedDistrict}`);
-      };
+        node.append("rect")
+          .attr("width", function(d) {
+            return d.x1 - d.x0;
+          })
+          .attr("height", function(d) {
+            return d.y1 - d.y0;
+          })
+          .attr("fill", function(d, i) {
+            return "url(#gradient-" + i + ")"; // Apply the linear gradient
+          })
+          .attr("stroke", "white");
 
-      // Initial rendering
-      createTreemap("all");
+        node.append("clipPath")
+          .attr("id", function(d, i) { return "clip-" + i; })
+          .append("use")
+          .attr("xlink:href", function(d, i) { return "#clip-" + i; })
+          .attr("fill", "none");
 
-      // Attach event listener to the district select element
-      districtSelect.on("change", function() {
-        const selectedDistrict = this.value;
-        createTreemap(selectedDistrict);
-      });
+        node.append("text")
+          .attr("clip-path", function(d, i) { return "url(#clip-" + i + ")"; })
+          .selectAll("tspan")
+          .data(function(d) {
+            return d.data.name.split(/(?=[A-Z][^A-Z])/g);
+          })
+          .join("tspan")
+          .attr("x", 4)
+          .attr("y", function(d, i) {
+            return 13 + i * 10;
+          })
+          .text(function(d) {
+            return d;
+          });
+
+        node.append("title")
+          .text(function(d) {
+            return d.data.name + "\nValue: " + d.value;
+          });
+      }
+
+      // Function to handle the select change event
+      function handleSelectChange() {
+        const selectedDistrict = districtSelect.property("value");
+        updateTreemap(selectedDistrict);
+      }
+
+      // Event listener for select change event
+      districtSelect.on("change", handleSelectChange);
+
+      // Initialize the treemap with all districts
+      updateTreemap("all");
     });
   </script>
 </body>
