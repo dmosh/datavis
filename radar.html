@@ -40,10 +40,7 @@
       margin-top: 30px;
     }
 
-    #parameter-select {
-      margin-bottom: 20px;
-    }
-
+    #parameter-select,
     #district-select {
       margin-bottom: 20px;
     }
@@ -96,10 +93,6 @@
       <label for="district-select">Select District:</label>
       <select id="district-select" onchange="updateChart()">
         <option value="all">All Districts</option>
-        <option value="district1">District 1</option>
-        <option value="district2">District 2</option>
-        <option value="district3">District 3</option>
-        <!-- Add more district options as needed -->
       </select>
     </div>
     <div id="chart-container">
@@ -119,8 +112,23 @@
     // Load data from data.csv and target.csv
     d3.csv("data.csv").then(function(dataset) {
       data = dataset;
+      populateDistrictOptions();
       updateChart();
     });
+
+    // Populate district options in the dropdown
+    function populateDistrictOptions() {
+      var districtSelect = document.getElementById("district-select");
+      var districtOptions = Array.from(new Set(data.map(function(d) { return d.District; })));
+      districtOptions.unshift("All Districts");
+
+      districtOptions.forEach(function(option) {
+        var optionElement = document.createElement("option");
+        optionElement.value = option;
+        optionElement.textContent = option;
+        districtSelect.appendChild(optionElement);
+      });
+    }
 
     // Function to update the chart based on the selected parameter and district
     function updateChart() {
@@ -129,9 +137,9 @@
       currentParameter = parameter;
       currentDistrict = district;
 
-      // Filter data based on selected district
-      var filteredData = (district === "all") ? data : data.filter(function(d) {
-        return d.District === district;
+      // Filter the data based on the selected district
+      var filteredData = (currentDistrict === "all") ? data : data.filter(function(d) {
+        return d.District === currentDistrict;
       });
 
       // Process the filtered data
