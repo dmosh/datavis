@@ -212,10 +212,10 @@
         });
       }
 
-      // Process the filtered data here and return an array of objects with district, value, and color properties
+      // Process the filtered data here and return an array of objects with village, value, and color properties
       return filteredData.map(function(d) {
         return {
-          district: d.District.substring(0, 3), // Truncate label to the first 3 characters
+          village: d.Village, // Use village names as labels
           value: +d[parameter]
         };
       });
