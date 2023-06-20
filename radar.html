@@ -116,19 +116,6 @@
       updateChart();
     });
     
-    // Function to populate district options
-    function populateDistrictOptions(data) {
-      var districtOptions = Array.from(new Set(data.map(d => d.District)));
-      var select = d3.select("#district-select");
-    
-      select.selectAll("option")
-        .data(districtOptions)
-        .enter()
-        .append("option")
-        .text(function(d) { return d; })
-        .attr("value", function(d) { return d; });
-    }
-    
     // Function to update the chart based on the selected parameter and district
     function updateChart() {
       var parameter = d3.select("#parameter-select").node().value;
@@ -147,59 +134,10 @@
             data: processedData.map(function(d) { return d.value; })
           }
         ],
-        labels: processedData.map(function(d) { return d.label; }) // Use village names as labels
+        labels: processedData.map(function(d) { return d.label; })
       };
     
-      // Set up chart options
-      var chartOptions = {
-        chart: {
-          type: 'radar',
-          height: 600
-        },
-        series: chartData.series,
-        labels: chartData.labels,
-        dataLabels: {
-          enabled: true,
-          style: {
-            fill: '#000000',
-            fontSize: '12px',
-            fontFamily: 'Comfortaa, cursive',
-            transform: 'rotate(-90deg)', // Rotate labels by -90 degrees
-            textAnchor: 'end' // Align rotated labels to the end
-          }
-        },
-        plotOptions: {
-          radar: {
-            dataLabels: {
-              offsetY: 5,
-              formatter: function(value, { seriesIndex, dataPointIndex }) {
-                if (value === Math.max(...chartData.series[seriesIndex].data))
-                  return value;
-                return '';
-              }
-            },
-            polygons: {
-              fill: {
-                colors: ['#AA4A44', '#2979ff']
-              }
-            }
-          }
-        }
-      };
-    
-      // Remove existing chart
-      if (window.chart) {
-        window.chart.destroy();
-      }
-    
-      // Create radar chart
-      window.chart = new ApexCharts(document.querySelector("#radar-chart"), chartOptions);
-      window.chart.render();
-    
-      // Update chart title
-      var chartTitle = getChartTitle(parameter, district);
-      d3.select("#chart-title")
-        .text(chartTitle);
+      // Rest of the code...
     }
     
     // Function to process the raw data
