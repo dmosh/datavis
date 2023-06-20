@@ -108,31 +108,24 @@
     var data;
     var currentParameter = "ecoli";
     var currentDistrict = "all";
-    
+
     // Load data from data.csv and target.csv
-    Promise.all([
-      d3.csv("data.csv"),
-      new Promise(function(resolve) {
-        d3.csv("target.csv").then(function(targetData) {
-          resolve(targetData);
-        });
-      })
-    ]).then(function(datasets) {
-      data = datasets[0];
+    Promise.all([d3.csv("data.csv")]).then(function([dataset]) {
+      data = dataset;
       populateDistrictOptions(data);
       updateChart();
     });
-    
+
     // Function to update the chart based on the selected parameter and district
     function updateChart() {
       var parameter = d3.select("#parameter-select").node().value;
       var district = d3.select("#district-select").node().value;
       currentParameter = parameter;
       currentDistrict = district;
-    
+
       // Process the data
       var processedData = processData(data, parameter, district);
-    
+
       // Prepare data for radar chart
       var chartData = {
         series: [
@@ -143,10 +136,33 @@
         ],
         labels: processedData.map(function(d) { return d.label; })
       };
-    
-      // Rest of the code...
+
+      // Render radar chart
+      var options = {
+        chart: {
+          type: 'radar',
+          height: 600
+        },
+        series: chartData.series,
+        labels: chartData.labels,
+        title: {
+          text: getChartTitle(parameter, district),
+          align: 'center'
+        },
+        plotOptions: {
+          radar: {
+            polygons: {
+              strokeColors: ['#e8e8e8', 'transparent', 'transparent', 'transparent', 'transparent'],
+              connectorColors: 'transparent'
+            }
+          }
+        }
+      };
+
+      var radarChart = new ApexCharts(document.querySelector("#radar-chart"), options);
+      radarChart.render();
     }
-    
+
     // Function to process the raw data
     function processData(data, parameter, district) {
       // Filter the data based on the selected district
@@ -156,7 +172,7 @@
           return d.District === district;
         });
       }
-    
+
       // Process the filtered data here and return an array of objects with label, value, and color properties
       return filteredData.map(function(d) {
         return {
@@ -165,35 +181,30 @@
         };
       });
     }
-    
+
     // Function to populate the district options
     function populateDistrictOptions(data) {
       var districtSelect = d3.select("#district-select");
-    
-      // Get unique districts from the data
-      var districts = data.map(function(d) {
-        return d.District;
-      });
-    
-      // Remove duplicates
-      var uniqueDistricts = Array.from(new Set(districts));
-    
-      // Add options to select element
+
+      // Get unique district values from the data
+      var districts = Array.from(new Set(data.map(function(d) { return d.District; })));
+
+      // Append options to the select element
       districtSelect.selectAll("option")
-        .data(uniqueDistricts)
+        .data(districts)
         .enter()
         .append("option")
         .attr("value", function(d) { return d; })
         .text(function(d) { return d; });
     }
-    
+
     // Function to get the chart title based on the parameter and district
     function getChartTitle(parameter, district) {
       var title = "";
       if (district === "all") {
         title += parameter + " Concentration by District";
       } else {
-        title += parameter + " Concentration in " + district; // Updated the chart title
+        title += parameter + " Concentration in " + district;
       }
       return title;
     }
