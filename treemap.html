@@ -34,12 +34,11 @@
       margin: 0 auto;
     }
 
-    /* Tooltip style */
     .tooltip {
       position: absolute;
       background-color: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 5px;
+      color: #fff;
+      padding: 10px;
       font-size: 12px;
       pointer-events: none;
     }
@@ -200,7 +199,7 @@
         gradient.append("stop")
           .attr("offset", "100%")
           .attr("stop-color", function(d) {
-            return districtColors(d.parent.data.name).darker(0.8); // Make the color slightly darker
+            return districtColors(d.parent.data.name); // Assign a color based on district name
           });
 
         node.append("rect")
@@ -211,62 +210,44 @@
             return d.y1 - d.y0;
           })
           .attr("fill", function(d, i) {
-            return "url(#gradient-" + i + ")"; // Apply the linear gradient
+            return "url(#gradient-" + i + ")";
           })
           .attr("stroke", "white");
 
-        node.append("clipPath")
-          .attr("id", function(d, i) { return "clip-" + i; })
-          .append("use")
-          .attr("xlink:href", function(d, i) { return "#clip-" + i; })
-          .attr("fill", "none");
-
-        node.append("text")
-          .attr("clip-path", function(d, i) { return "url(#clip-" + i + ")"; })
-          .selectAll("tspan")
-          .data(function(d) {
-            return d.data.name.split(/(?=[A-Z][^A-Z])/g);
-          })
-          .join("tspan")
-          .attr("x", 4)
-          .attr("y", function(d, i) {
-            return 13 + i * 10;
-          })
-          .text(function(d) {
-            return d;
-          });
-
-        // Create a tooltip element
-        const tooltip = d3.select("#chart-container")
+        // Add tooltips to the treemap nodes
+        const tooltip = d3.select("body")
           .append("div")
           .attr("class", "tooltip")
           .style("opacity", 0);
 
+        node.append("title")
+          .text(function(d) {
+            return `${d.data.name}: ${d.data.village}\nE.coli: ${d.data.ecoli}\npH: ${d.data.ph}\nConductivity: ${d.data.conductivity}\nTurbidity: ${d.data.turbidity}`;
+          });
+
         node.on("mouseover", function(d) {
-          // Show the tooltip on mouseover
-          tooltip.transition()
-            .duration(200)
-            .style("opacity", 0.9);
-          tooltip.html(d.data.name + "<br>Value: " + d.value)
-            .style("left", (d3.event.pageX + 10) + "px")
-            .style("top", (d3.event.pageY - 10) + "px");
-        })
-          .on("mouseout", function(d) {
-            // Hide the tooltip on mouseout
             tooltip.transition()
               .duration(200)
+              .style("opacity", .9);
+            tooltip.html(`<b>${d.data.name}</b><br>${d.data.village}<br>E.coli: ${d.data.ecoli}<br>pH: ${d.data.ph}<br>Conductivity: ${d.data.conductivity}<br>Turbidity: ${d.data.turbidity}`)
+              .style("left", (d3.event.pageX + 10) + "px")
+              .style("top", (d3.event.pageY - 28) + "px");
+          })
+          .on("mouseout", function(d) {
+            tooltip.transition()
+              .duration(500)
               .style("opacity", 0);
           });
       }
 
-      // Initial treemap update
-      updateTreemap("all");
-
-      // Event listener for select element change
+      // Update the treemap when the selected district changes
       districtSelect.on("change", function() {
         const selectedDistrict = this.value;
         updateTreemap(selectedDistrict);
       });
+
+      // Initialize the treemap
+      updateTreemap("all");
     });
   </script>
 </body>
