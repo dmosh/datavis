@@ -67,22 +67,15 @@
       <h2 id="chart-title"></h2>
       <div id="chart"></div>
     </div>
-    <div class="form-group">
-      <label for="district-select">Select District:</label>
-      <select class="form-control" id="district-select">
-        <option value="all">All Districts</option>
-      </select>
-    </div>
   </div>
 
   <script>
     d3.csv("data.csv").then(function(data) {
       console.log(data); // Check if the data is loaded correctly
 
-      // Retrieve unique districts from data
-      const districts = Array.from(new Set(data.map(d => d.District)));
+      const districts = [...new Set(data.map(d => d.District))];
 
-      // Add districts to the dropdown select element
+      // Create the district select dropdown
       const districtSelect = d3.select("#district-select");
       districts.forEach(district => {
         districtSelect
@@ -91,17 +84,17 @@
           .text(district);
       });
 
-      // Data preprocessing
-      const nestedData = d3.group(data, d => d.District);
-      console.log(nestedData); // Check if the data is grouped correctly
-
       const createTreemap = selectedDistrict => {
         // Filter the data based on the selected district
-        const filteredData = selectedDistrict === "all" ? data : nestedData.get(selectedDistrict);
+        const filteredData = selectedDistrict === "all" ? data : data.filter(d => d.District === selectedDistrict);
+
+        // Data preprocessing
+        const nestedData = d3.group(filteredData, d => d.District);
+        console.log(nestedData); // Check if the data is grouped correctly
 
         const root = {
           name: "Uganda",
-          children: Array.from(filteredData, ([district, values]) => ({
+          children: Array.from(nestedData, ([district, values]) => ({
             name: district,
             children: Array.from(values, entry => ({
               name: entry.Parameter,
@@ -139,9 +132,6 @@
 
         treemap(rootHierarchy);
 
-        // Remove existing chart
-        d3.select("#chart svg").remove();
-
         // Create the SVG container
         const svg = d3.select("#chart")
           .append("svg")
@@ -162,6 +152,7 @@
             return "translate(" + d.x0 + "," + d.y0 + ")";
           });
 
+        // Append the rectangle with the gradient fill
         node.append("rect")
           .attr("width", function(d) {
             return d.x1 - d.x0;
@@ -170,40 +161,9 @@
             return d.y1 - d.y0;
           })
           .attr("fill", function(d) {
-            return districtColors(d.parent.data.name); // Assign a color based on district name
+            return districtColors(d.parent.data.name);
           })
           .attr("stroke", "white");
-
-        // Define a linear gradient for the rectangle fill
-        const gradient = node.append("linearGradient")
-          .attr("id", function(d, i) { return "gradient-" + i; })
-          .attr("gradientUnits", "userSpaceOnUse")
-          .attr("x1", "0%").attr("y1", "0%")
-          .attr("x2", "100%").attr("y2", "0%");
-
-        gradient.append("stop")
-          .attr("offset", "0%")
-          .attr("stop-color", function(d) {
-            return districtColors(d.parent.data.name); // Start color of the gradient
-          });
-
-        gradient.append("stop")
-          .attr("offset", "100%")
-          .attr("stop-color", function(d) {
-            return d3.rgb(d3.color(districtColors(d.parent.data.name))).darker(2); // End color of the gradient
-          });
-
-        // Append the rectangle with the gradient fill
-        node.append("rect")
-          .attr("width", function(d) {
-            return (d.x1 - d.x0) * d.data.ecoli / d.parent.value;
-          })
-          .attr("height", function(d) {
-            return (d.y1 - d.y0) * d.data.ecoli / d.parent.value;
-          })
-          .style("fill", function(d, i) {
-            return "url(#gradient-" + i + ")"; // Apply the linear gradient fill
-          });
 
         // Append the text label
         node.append("text")
