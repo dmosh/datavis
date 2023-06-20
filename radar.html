@@ -175,7 +175,6 @@
       });
     }
 
-    // Function to process the raw data
     function processData(data, parameter, district) {
       // Filter the data based on the selected district
       var filteredData = data;
@@ -184,15 +183,18 @@
           return d.District === district;
         });
       }
-
+    
       // Process the filtered data here and return an array of objects with label, value, and color properties
-      return filteredData.map(function(d) {
+      var processedData = filteredData.map(function(d) {
         return {
           label: d.Village,
           value: +d[parameter]
         };
       });
+    
+      return processedData;
     }
+
 
     // Function to get the chart title based on the parameter and district
     function getChartTitle(parameter, district) {
