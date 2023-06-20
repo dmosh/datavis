@@ -98,10 +98,12 @@
           .selectAll("svg")
           .data([null])
           .join("svg")
-          .attr("viewBox", `0 0 ${width} ${height}`)
-          .attr("preserveAspectRatio", "xMidYMid meet")
-          .append("g")
-          .attr("transform", "translate(0,0)");
+          .attr("viewBox", [0, 0, width, height])
+          .style("font", "10px sans-serif");
+
+        // Move the district filter above the chart
+        const districtFilter = d3.select("#district-select").node();
+        svg.node().parentNode.insertBefore(districtFilter, svg.node());
 
         // Create the gradients for the treemap nodes
         const districtColors = d3.scaleOrdinal(d3.schemeCategory10);
