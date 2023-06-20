@@ -120,10 +120,10 @@
     function populateDistrictOptions(data) {
       var districtOptions = Array.from(new Set(data.map(d => d.District)));
       var select = d3.select("#district-select");
-
+    
       // Log the array of districts to the console
       console.log("Districts:", districtOptions);
-
+    
       select.selectAll("option")
         .data(districtOptions)
         .enter()
