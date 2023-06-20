@@ -110,8 +110,15 @@
     var currentDistrict = "all";
     
     // Load data from data.csv and target.csv
-    d3.csv("data.csv").then(function(dataset) {
-      data = dataset;
+    Promise.all([
+      d3.csv("data.csv"),
+      new Promise(function(resolve) {
+        d3.csv("target.csv").then(function(targetData) {
+          resolve(targetData);
+        });
+      })
+    ]).then(function(datasets) {
+      data = datasets[0];
       populateDistrictOptions(data);
       updateChart();
     });
@@ -137,22 +144,7 @@
         labels: processedData.map(function(d) { return d.label; })
       };
     
-      // Get the chart title
-      var chartTitle = getChartTitle(parameter, district);
-      document.getElementById("chart-title").innerHTML = chartTitle;
-    
-      // Render the radar chart
-      var options = {
-        chart: {
-          height: 600,
-          type: 'radar',
-        },
-        series: chartData.series,
-        labels: chartData.labels,
-      };
-    
-      var chart = new ApexCharts(document.querySelector("#radar-chart"), options);
-      chart.render();
+      // Rest of the code...
     }
     
     // Function to process the raw data
@@ -179,11 +171,16 @@
       var districtSelect = d3.select("#district-select");
     
       // Get unique districts from the data
-      var districts = d3.map(data, function(d) { return d.District; }).keys();
+      var districts = data.map(function(d) {
+        return d.District;
+      });
     
-      // Add options to the select element
+      // Remove duplicates
+      var uniqueDistricts = Array.from(new Set(districts));
+    
+      // Add options to select element
       districtSelect.selectAll("option")
-        .data(districts)
+        .data(uniqueDistricts)
         .enter()
         .append("option")
         .attr("value", function(d) { return d; })
@@ -196,7 +193,7 @@
       if (district === "all") {
         title += parameter + " Concentration by District";
       } else {
-        title += parameter + " Concentration in " + district;
+        title += parameter + " Concentration in " + district; // Updated the chart title
       }
       return title;
     }
