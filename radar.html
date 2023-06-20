@@ -44,6 +44,10 @@
       margin-bottom: 20px;
     }
 
+    #district-select {
+      margin-bottom: 20px;
+    }
+
     .chart {
       width: 1000px;
       height: 600px;
@@ -88,6 +92,16 @@
         <option value="sulphate">Sulphate</option>
       </select>
     </div>
+    <div>
+      <label for="district-select">Select District:</label>
+      <select id="district-select" onchange="updateChart()">
+        <option value="all">All Districts</option>
+        <option value="district1">District 1</option>
+        <option value="district2">District 2</option>
+        <option value="district3">District 3</option>
+        <!-- Add more district options as needed -->
+      </select>
+    </div>
     <div id="chart-container">
       <h2 id="chart-title"></h2>
       <div id="radar-chart" class="chart"></div>
@@ -100,6 +114,7 @@
     // Global variables
     var data;
     var currentParameter = "ecoli";
+    var currentDistrict = "all";
 
     // Load data from data.csv and target.csv
     d3.csv("data.csv").then(function(dataset) {
@@ -107,13 +122,20 @@
       updateChart();
     });
 
-    // Function to update the chart based on the selected parameter
+    // Function to update the chart based on the selected parameter and district
     function updateChart() {
       var parameter = d3.select("#parameter-select").node().value;
+      var district = d3.select("#district-select").node().value;
       currentParameter = parameter;
+      currentDistrict = district;
 
-      // Process the data
-      var processedData = processData(data, parameter);
+      // Filter data based on selected district
+      var filteredData = (district === "all") ? data : data.filter(function(d) {
+        return d.District === district;
+      });
+
+      // Process the filtered data
+      var processedData = processData(filteredData, parameter);
 
       // Prepare data for radar chart
       var chartData = {
@@ -128,7 +150,7 @@
 
       // Set up chart options
       var chartOptions = {
-       chart: {
+        chart: {
           type: 'radar',
           height: 600
         },
@@ -178,7 +200,6 @@
         .text(chartTitle);
     }
 
-    // Function to process the raw data
     // Function to process the raw data
     function processData(data, parameter) {
       // Process the data here and return an array of objects with district, value, and color properties
