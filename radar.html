@@ -118,7 +118,7 @@
 
     // Function to populate district options
     function populateDistrictOptions(data) {
-      var districtOptions = d3.map(data, function(d) { return d.District; }).keys();
+      var districtOptions = Array.from(new Set(data.map(d => d.District)));
       var select = d3.select("#district-select");
 
       select.selectAll("option")
@@ -220,7 +220,7 @@
         };
       });
     }
-    
+
     // Function to get the chart title based on the parameter and district
     function getChartTitle(parameter, district) {
       var title = "";
