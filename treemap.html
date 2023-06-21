@@ -235,8 +235,30 @@
           .attr("height", function(d) {
             return d.y1 - d.y0;
           })
-          .attr("fill", function(d, i) {
-            return "url(#gradient-" + i + ")"; // Apply the linear gradient
+          .attr("fill", function(d) {
+            const districtColor = districtColors(d.parent.data.name);
+            const gradientId = "gradient-" + d.parent.data.name.replace(/\s+/g, '-').toLowerCase();
+            let gradient = d3.select(this).select("#" + gradientId);
+            
+            if (gradient.empty()) {
+              gradient = d3.select(this).append("linearGradient")
+                .attr("id", gradientId)
+                .attr("gradientUnits", "userSpaceOnUse")
+                .attr("x1", 0)
+                .attr("y1", 0)
+                .attr("x2", 1)
+                .attr("y2", 1);
+                
+              gradient.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", "white");
+                
+              gradient.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", districtColor);
+            }
+            
+            return "url(#" + gradientId + ")";
           })
           .attr("stroke", "white");
 
