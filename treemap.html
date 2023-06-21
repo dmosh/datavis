@@ -75,27 +75,6 @@
     </div>
   </div>
 
-  <!-- Add Bootstrap modal for the village information popup -->
-  <div class="modal fade" id="villageModal" tabindex="-1" role="dialog" aria-labelledby="villageModalLabel"
-       aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="villageModalLabel">Village Information</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <ul id="village-info"></ul>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script>
     d3.csv("data.csv").then(function(data) {
       console.log(data); // Check if the data is loaded correctly
@@ -182,7 +161,7 @@
           .attr("transform", function(d) {
             return "translate(" + d.x0 + "," + d.y0 + ")";
           });
-
+        
         node.append("rect")
           .attr("width", function(d) {
             return d.x1 - d.x0;
@@ -194,14 +173,14 @@
             const districtColor = districtColors(d.parent.data.name); // Assign a color based on district name
             const gradientId = "gradient-" + d.parent.data.name.replace(/\s+/g, '-').toLowerCase(); // Generate a unique gradient id for each district
             let gradient = d3.select(this).select("#" + gradientId);
-
+        
             // If the gradient for the district doesn't exist, create it
             if (gradient.empty()) {
               const gradientData = [
                 { offset: "0%", color: "white" },
                 { offset: "100%", color: d3.color(districtColor).darker(0.8) }
               ];
-
+        
               // Create the gradient and color stops
               gradient = d3.select(this).append("linearGradient")
                 .attr("id", gradientId)
@@ -210,7 +189,7 @@
                 .attr("y1", 0)
                 .attr("x2", 1)
                 .attr("y2", 1);
-
+        
               gradient.selectAll("stop")
                 .data(gradientData)
                 .enter()
@@ -222,13 +201,44 @@
                   return d.color;
                 });
             }
-
+        
             return "url(#" + gradientId + ")"; // Apply the linear gradient
           })
-          .attr("stroke", "white")
-          .on("click", function(d) {
-            showPopup(d.data);
+          .attr("stroke", "white");
+                
+        // Define a linear gradient for the rectangle fill
+        const gradient = node.append("linearGradient")
+          .attr("id", function(d, i) { return "gradient-" + i; })
+          .attr("gradientUnits", "userSpaceOnUse")
+          .attr("x1", 0)
+          .attr("y1", 0)
+          .attr("x2", 1)
+          .attr("y2", 1);
+
+        gradient.append("stop")
+          .attr("offset", "0%")
+          .attr("stop-color", "white");
+
+        gradient.append("stop")
+          .attr("offset", "100%")
+          .attr("stop-color", function(d) {
+            const color = districtColors(d.parent.data.name);
+            const darkerColor = d3.color(color).darker(0.8);
+            return darkerColor.toString(); // Convert the color object back to string
           });
+
+
+        node.append("rect")
+          .attr("width", function(d) {
+            return d.x1 - d.x0;
+          })
+          .attr("height", function(d) {
+            return d.y1 - d.y0;
+          })
+          .attr("fill", function(d, i) {
+            return "url(#gradient-" + i + ")"; // Apply the linear gradient
+          })
+          .attr("stroke", "white");
 
         node.append("clipPath")
           .attr("id", function(d, i) { return "clip-" + i; })
@@ -268,30 +278,6 @@
 
       // Initialize the treemap with all districts
       updateTreemap("all");
-
-      // Function to show the popup with village information
-      function showPopup(villageData) {
-        const modalTitle = document.getElementById("village-info-title");
-        const modalBody = document.getElementById("village-info");
-
-        // Clear the previous village information
-        modalTitle.textContent = "";
-        modalBody.innerHTML = "";
-
-        // Set the title of the modal
-        modalTitle.textContent = villageData.village;
-
-        // Create a list of parameters and their values
-        const parameters = ["E. Coli", "pH", "Electrical Conductivity", "Turbidity"];
-        for (const parameter of parameters) {
-          const listItem = document.createElement("li");
-          listItem.textContent = parameter + ": " + villageData[parameter.toLowerCase()];
-          modalBody.appendChild(listItem);
-        }
-
-        // Show the modal
-        $('#villageModal').modal('show');
-      }
     });
   </script>
 </body>
