@@ -263,7 +263,7 @@
 
         node.append("title")
           .text(function(d) {
-            return d.data.name + "\nValue: " + d.value;
+            return "District: " + d.parent.data.name + "\nParameter: " + d.data.name + "\nVillage: " + d.data.village + "\nEcoli: " + d.data.ecoli + "\npH: " + d.data.ph + "\nTurbidity: " + d.data.turbidity;
           });
       }
 
@@ -276,7 +276,7 @@
       // Event listener for select change event
       districtSelect.on("change", handleSelectChange);
 
-      // Initialize the treemap with all districts
+      // Initial treemap update
       updateTreemap("all");
     });
   </script>
