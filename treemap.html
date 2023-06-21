@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Treemap</title>
+  <title>Treemap with Tooltips</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
@@ -32,6 +32,18 @@
       width: 1200px;
       height: 900px; /* Increase the height to accommodate the treemap */
       margin: 0 auto;
+    }
+
+    .tooltip {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 5px;
+      border-radius: 5px;
+      font-size: 12px;
+      transition: opacity 0.3s;
     }
   </style>
 </head>
@@ -75,6 +87,8 @@
     </div>
   </div>
 
+  <div id="tooltip" class="tooltip"></div>
+
   <script>
     d3.csv("data.csv").then(function(data) {
       console.log(data); // Check if the data is loaded correctly
@@ -106,6 +120,12 @@
       const treemap = d3.treemap()
         .size([width, height])
         .padding(1);
+
+      // Create a tooltip div
+      const tooltip = d3.select("body")
+        .append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
 
       // Function to update the treemap based on the selected district
       function updateTreemap(selectedDistrict) {
@@ -176,12 +196,9 @@
 
         // Define a linear gradient for the rectangle fill
         const gradient = node.append("linearGradient")
-          .attr("id", function(d, i) { return "gradient-" + i; })
-          .attr("gradientUnits", "userSpaceOnUse")
-          .attr("x1", 0)
-          .attr("y1", 0)
-          .attr("x2", 1)
-          .attr("y2", 1);
+          .attr("id", function(d) {
+            return "gradient-" + d.data.village; // Unique gradient id for each village
+          });
 
         gradient.append("stop")
           .attr("offset", "0%")
@@ -190,7 +207,7 @@
         gradient.append("stop")
           .attr("offset", "100%")
           .attr("stop-color", function(d) {
-            return districtColors(d.parent.data.name).darker(0.8); // Make the color slightly darker
+            return districtColors(d.parent.data.name);
           });
 
         node.append("rect")
@@ -200,49 +217,43 @@
           .attr("height", function(d) {
             return d.y1 - d.y0;
           })
-          .attr("fill", function(d, i) {
-            return "url(#gradient-" + i + ")"; // Apply the linear gradient
+          .style("fill", function(d) {
+            return "url(#gradient-" + d.data.village + ")";
           })
-          .attr("stroke", "white");
-
-        node.append("clipPath")
-          .attr("id", function(d, i) { return "clip-" + i; })
-          .append("use")
-          .attr("xlink:href", function(d, i) { return "#clip-" + i; })
-          .attr("fill", "none");
-
-        node.append("text")
-          .attr("clip-path", function(d, i) { return "url(#clip-" + i + ")"; })
-          .selectAll("tspan")
-          .data(function(d) {
-            return d.data.name.split(/(?=[A-Z][^A-Z])/g);
+          .attr("stroke", "white")
+          .on("mouseover", function(d) {
+            tooltip.transition()
+              .duration(200)
+              .style("opacity", .9);
+            tooltip.html(d.data.name + "<br/>" +
+                "Village: " + d.data.village + "<br/>" +
+                "E.coli: " + d.data.ecoli + "<br/>" +
+                "pH: " + d.data.ph + "<br/>" +
+                "Conductivity: " + d.data.conductivity + "<br/>" +
+                "Turbidity: " + d.data.turbidity)
+              .style("left", (d3.event.pageX + 10) + "px")
+              .style("top", (d3.event.pageY - 28) + "px");
           })
-          .join("tspan")
-          .attr("x", 4)
-          .attr("y", function(d, i) {
-            return 13 + i * 10;
-          })
-          .text(function(d) {
-            return d;
+          .on("mouseout", function(d) {
+            tooltip.transition()
+              .duration(500)
+              .style("opacity", 0);
           });
 
-        node.append("title")
-          .text(function(d) {
-            return d.data.name + "\nValue: " + d.value;
-          });
+        // Update the chart title
+        const chartTitle = selectedDistrict === "all" ? "Water Quality by District" : "Water Quality in " + selectedDistrict;
+        d3.select("#chart-title")
+          .text(chartTitle);
       }
-
-      // Function to handle the select change event
-      function handleSelectChange() {
-        const selectedDistrict = districtSelect.property("value");
-        updateTreemap(selectedDistrict);
-      }
-
-      // Event listener for select change event
-      districtSelect.on("change", handleSelectChange);
 
       // Initialize the treemap with all districts
       updateTreemap("all");
+
+      // Event listener for district selection
+      districtSelect.on("change", function() {
+        const selectedDistrict = this.value;
+        updateTreemap(selectedDistrict);
+      });
     });
   </script>
 </body>
