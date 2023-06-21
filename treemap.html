@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Treemap with Tooltips</title>
+  <title>Treemap</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
@@ -34,16 +34,18 @@
       margin: 0 auto;
     }
 
+    /* Tooltip styling */
     .tooltip {
       position: absolute;
-      pointer-events: none;
-      opacity: 0;
+      text-align: left;
+      padding: 10px;
       background-color: rgba(0, 0, 0, 0.8);
       color: #fff;
-      padding: 5px;
       border-radius: 5px;
+      pointer-events: none;
+      opacity: 0;
       font-size: 12px;
-      transition: opacity 0.3s;
+      line-height: 1.5;
     }
   </style>
 </head>
@@ -87,7 +89,8 @@
     </div>
   </div>
 
-  <div id="tooltip" class="tooltip"></div>
+  <!-- Tooltip element -->
+  <div class="tooltip" id="tooltip" style="display: none;"></div>
 
   <script>
     d3.csv("data.csv").then(function(data) {
@@ -120,12 +123,6 @@
       const treemap = d3.treemap()
         .size([width, height])
         .padding(1);
-
-      // Create a tooltip div
-      const tooltip = d3.select("body")
-        .append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
 
       // Function to update the treemap based on the selected district
       function updateTreemap(selectedDistrict) {
@@ -174,82 +171,73 @@
         // Define an array of colors for districts
         const districtColors = d3.scaleOrdinal(d3.schemeCategory10);
 
-        // Create the treemap nodes
-        const node = svg.selectAll("g")
+        // Define a linear gradient for the rectangle fill
+        const gradient = svg.append("defs")
+          .selectAll("linearGradient")
+          .data(rootHierarchy.leaves())
+          .join("linearGradient")
+          .attr("id", function(d, i) {
+            return "gradient-" + i;
+          })
+          .attr("gradientUnits", "userSpaceOnUse")
+          .attr("x1", 0)
+          .attr("y1", 0)
+          .attr("x2", 1)
+          .attr("y2", 1);
+
+        gradient.append("stop")
+          .attr("offset", "0%")
+          .attr("stop-color", function(d) {
+            return districtColors(d.parent.data.name);
+          });
+
+        gradient.append("stop")
+          .attr("offset", "100%")
+          .attr("stop-color", "#fff");
+
+        // Create the treemap rectangles
+        const cells = svg.selectAll("g")
           .data(rootHierarchy.leaves())
           .join("g")
           .attr("transform", function(d) {
             return "translate(" + d.x0 + "," + d.y0 + ")";
           });
 
-        node.append("rect")
+        cells.append("rect")
+          .attr("class", "tile")
+          .attr("fill", function(d, i) {
+            return "url(#gradient-" + i + ")";
+          })
           .attr("width", function(d) {
             return d.x1 - d.x0;
           })
           .attr("height", function(d) {
             return d.y1 - d.y0;
-          })
-          .attr("fill", function(d) {
-            return districtColors(d.parent.data.name); // Assign a color based on district name
-          })
-          .attr("stroke", "white");
-
-        // Define a linear gradient for the rectangle fill
-        const gradient = node.append("linearGradient")
-          .attr("id", function(d) {
-            return "gradient-" + d.data.village; // Unique gradient id for each village
           });
 
-        gradient.append("stop")
-          .attr("offset", "0%")
-          .attr("stop-color", "white");
+        // Show tooltips on mouseover
+        cells.on("mouseover", function(d) {
+          const tooltip = d3.select("#tooltip");
+          tooltip.style("opacity", 1);
+          tooltip.html("<strong>Village:</strong> " + d.data.village + "<br>" +
+            "<strong>District:</strong> " + d.parent.data.name + "<br>" +
+            "<strong>Parameter:</strong> " + d.data.name + "<br>" +
+            "<strong>Value:</strong> " + d.data.value)
+            .style("left", (d3.event.pageX + 10) + "px")
+            .style("top", (d3.event.pageY + 10) + "px");
+        });
 
-        gradient.append("stop")
-          .attr("offset", "100%")
-          .attr("stop-color", function(d) {
-            return districtColors(d.parent.data.name);
-          });
-
-        node.append("rect")
-          .attr("width", function(d) {
-            return d.x1 - d.x0;
-          })
-          .attr("height", function(d) {
-            return d.y1 - d.y0;
-          })
-          .style("fill", function(d) {
-            return "url(#gradient-" + d.data.village + ")";
-          })
-          .attr("stroke", "white")
-          .on("mouseover", function(d) {
-            tooltip.transition()
-              .duration(200)
-              .style("opacity", .9);
-            tooltip.html(d.data.name + "<br/>" +
-                "Village: " + d.data.village + "<br/>" +
-                "E.coli: " + d.data.ecoli + "<br/>" +
-                "pH: " + d.data.ph + "<br/>" +
-                "Conductivity: " + d.data.conductivity + "<br/>" +
-                "Turbidity: " + d.data.turbidity)
-              .style("left", (d3.event.pageX + 10) + "px")
-              .style("top", (d3.event.pageY - 28) + "px");
-          })
-          .on("mouseout", function(d) {
-            tooltip.transition()
-              .duration(500)
-              .style("opacity", 0);
-          });
-
-        // Update the chart title
-        const chartTitle = selectedDistrict === "all" ? "Water Quality by District" : "Water Quality in " + selectedDistrict;
-        d3.select("#chart-title")
-          .text(chartTitle);
+        // Hide tooltips on mouseout
+        cells.on("mouseout", function() {
+          const tooltip = d3.select("#tooltip");
+          tooltip.style("opacity", 0);
+        });
       }
 
-      // Initialize the treemap with all districts
+      // Initial treemap rendering
       updateTreemap("all");
 
-      // Event listener for district selection
+      // Update the treemap when the district is changed
       districtSelect.on("change", function() {
         const selectedDistrict = this.value;
         updateTreemap(selectedDistrict);
