@@ -170,7 +170,7 @@
             return d.y1 - d.y0;
           })
           .attr("fill", function(d) {
-            return districtColors(d.parent.data.name); // Assign a color based on district name
+            return districtColors(d.data.name); // Assign a color based on district name
           })
           .attr("stroke", "white");
 
