@@ -33,20 +33,6 @@
       height: 900px; /* Increase the height to accommodate the treemap */
       margin: 0 auto;
     }
-
-    /* Tooltip styling */
-    .tooltip {
-      position: absolute;
-      text-align: left;
-      padding: 10px;
-      background-color: rgba(0, 0, 0, 0.8);
-      color: #fff;
-      border-radius: 5px;
-      pointer-events: none;
-      opacity: 0;
-      font-size: 12px;
-      line-height: 1.5;
-    }
   </style>
 </head>
 <body>
@@ -88,9 +74,6 @@
       <div id="chart"></div>
     </div>
   </div>
-
-  <!-- Tooltip element -->
-  <div class="tooltip" id="tooltip" style="display: none;"></div>
 
   <script>
     d3.csv("data.csv").then(function(data) {
@@ -171,14 +154,29 @@
         // Define an array of colors for districts
         const districtColors = d3.scaleOrdinal(d3.schemeCategory10);
 
-        // Define a linear gradient for the rectangle fill
-        const gradient = svg.append("defs")
-          .selectAll("linearGradient")
+        // Create the treemap nodes
+        const node = svg.selectAll("g")
           .data(rootHierarchy.leaves())
-          .join("linearGradient")
-          .attr("id", function(d, i) {
-            return "gradient-" + i;
+          .join("g")
+          .attr("transform", function(d) {
+            return "translate(" + d.x0 + "," + d.y0 + ")";
+          });
+
+        node.append("rect")
+          .attr("width", function(d) {
+            return d.x1 - d.x0;
           })
+          .attr("height", function(d) {
+            return d.y1 - d.y0;
+          })
+          .attr("fill", function(d) {
+            return districtColors(d.parent.data.name); // Assign a color based on district name
+          })
+          .attr("stroke", "white");
+
+        // Define a linear gradient for the rectangle fill
+        const gradient = node.append("linearGradient")
+          .attr("id", function(d, i) { return "gradient-" + i; })
           .attr("gradientUnits", "userSpaceOnUse")
           .attr("x1", 0)
           .attr("y1", 0)
@@ -187,65 +185,64 @@
 
         gradient.append("stop")
           .attr("offset", "0%")
-          .attr("stop-color", function(d) {
-            return districtColors(d.parent.data.name);
-          });
+          .attr("stop-color", "white");
 
         gradient.append("stop")
           .attr("offset", "100%")
-          .attr("stop-color", "#fff");
-
-        // Create the treemap rectangles
-        const cells = svg.selectAll("g")
-          .data(rootHierarchy.leaves())
-          .join("g")
-          .attr("transform", function(d) {
-            return "translate(" + d.x0 + "," + d.y0 + ")";
+          .attr("stop-color", function(d) {
+            return districtColors(d.parent.data.name).darker(0.8); // Make the color slightly darker
           });
 
-        cells.append("rect")
-          .attr("class", "tile")
-          .attr("fill", function(d, i) {
-            return "url(#gradient-" + i + ")";
-          })
+        node.append("rect")
           .attr("width", function(d) {
             return d.x1 - d.x0;
           })
           .attr("height", function(d) {
             return d.y1 - d.y0;
+          })
+          .attr("fill", function(d, i) {
+            return "url(#gradient-" + i + ")"; // Apply the linear gradient
+          })
+          .attr("stroke", "white");
+
+        node.append("clipPath")
+          .attr("id", function(d, i) { return "clip-" + i; })
+          .append("use")
+          .attr("xlink:href", function(d, i) { return "#clip-" + i; })
+          .attr("fill", "none");
+
+        node.append("text")
+          .attr("clip-path", function(d, i) { return "url(#clip-" + i + ")"; })
+          .selectAll("tspan")
+          .data(function(d) {
+            return d.data.name.split(/(?=[A-Z][^A-Z])/g);
+          })
+          .join("tspan")
+          .attr("x", 4)
+          .attr("y", function(d, i) {
+            return 13 + i * 10;
+          })
+          .text(function(d) {
+            return d;
           });
 
-        // Show tooltips on mouseover
-        cells.on("mouseover", function(event, d) {
-          const tooltip = d3.select("#tooltip");
-          tooltip.style("opacity", 1);
-          tooltip.html(function() {
-            let tooltipContent = "<strong>District:</strong> " + d.parent.data.name + "<br>" +
-              "<strong>Parameter:</strong> " + d.data.name + "<br>" +
-              "<strong>Value:</strong> " + d.data.value;
-            if (d.data.village) {
-              tooltipContent = "<strong>Village:</strong> " + d.data.village + "<br>" + tooltipContent;
-            }
-            return tooltipContent;
-          })
-          .style("left", (event.pageX + 10) + "px")
-          .style("top", (event.pageY + 10) + "px");
-        });
-        
-        // Hide tooltips on mouseout
-        cells.on("mouseout", function() {
-          const tooltip = d3.select("#tooltip");
-          tooltip.style("opacity", 0);
-        });
+        node.append("title")
+          .text(function(d) {
+            return d.data.name + "\nValue: " + d.value;
+          });
+      }
 
-      // Initial treemap rendering
-      updateTreemap("all");
-
-      // Update the treemap when the district is changed
-      districtSelect.on("change", function() {
-        const selectedDistrict = this.value;
+      // Function to handle the select change event
+      function handleSelectChange() {
+        const selectedDistrict = districtSelect.property("value");
         updateTreemap(selectedDistrict);
-      });
+      }
+
+      // Event listener for select change event
+      districtSelect.on("change", handleSelectChange);
+
+      // Initialize the treemap with all districts
+      updateTreemap("all");
     });
   </script>
 </body>
