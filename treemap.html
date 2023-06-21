@@ -190,8 +190,11 @@
         gradient.append("stop")
           .attr("offset", "100%")
           .attr("stop-color", function(d) {
-            return districtColors(d.parent.data.name).darker(0.8); // Make the color slightly darker
+            const color = districtColors(d.parent.data.name);
+            const darkerColor = d3.color(color).darker(0.8);
+            return darkerColor.toString(); // Convert the color object back to string
           });
+
 
         node.append("rect")
           .attr("width", function(d) {
