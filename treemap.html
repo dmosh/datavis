@@ -216,7 +216,7 @@
           });
 
         // Show tooltips on mouseover
-        cells.on("mouseover", function(d) {
+        cells.on("mouseover", function(event, d) {
           const tooltip = d3.select("#tooltip");
           tooltip.style("opacity", 1);
           tooltip.html(function() {
@@ -228,14 +228,15 @@
             }
             return tooltipContent;
           })
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY + 10) + "px");
         });
-
+        
         // Hide tooltips on mouseout
         cells.on("mouseout", function() {
           const tooltip = d3.select("#tooltip");
           tooltip.style("opacity", 0);
         });
-      }
 
       // Initial treemap rendering
       updateTreemap("all");
