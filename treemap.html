@@ -172,7 +172,7 @@
           .attr("fill", function(d) {
             const districtColor = districtColors(d.parent.data.name); // Assign a color based on district name
             const gradientId = "gradient-" + d.parent.data.name.replace(/\s+/g, '-').toLowerCase(); // Generate a unique gradient id for each district
-            const gradient = node.select("#" + gradientId);
+            let gradient = d3.select(this).select("#" + gradientId);
         
             // If the gradient for the district doesn't exist, create it
             if (gradient.empty()) {
@@ -182,7 +182,7 @@
               ];
         
               // Create the gradient and color stops
-              gradient = node.append("linearGradient")
+              gradient = d3.select(this).append("linearGradient")
                 .attr("id", gradientId)
                 .attr("gradientUnits", "userSpaceOnUse")
                 .attr("x1", 0)
@@ -205,7 +205,7 @@
             return "url(#" + gradientId + ")"; // Apply the linear gradient
           })
           .attr("stroke", "white");
-
+                
         // Define a linear gradient for the rectangle fill
         const gradient = node.append("linearGradient")
           .attr("id", function(d, i) { return "gradient-" + i; })
