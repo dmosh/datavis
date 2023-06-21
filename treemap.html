@@ -1,93 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Treemap</title>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <meta charset="UTF-8">
+  <title>Uganda Water Quality Treemap</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/d3/6.7.0/d3.min.css" integrity="sha512-lhED0QnU6fy7vF2t1QyxMziFSvJkV6g4c6yM2vBjHOGtw0y6vWuv7Ilo8N9SMh0LlOdk8wvNtC9sXwD9CHeh6g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
-    @import url(https://fonts.googleapis.com/css2?family=Comfortaa:wght@300);
-
     body {
-      font-family: 'Comfortaa', cursive;
-      background: linear-gradient(130deg, #ccc 5%, #c8c8c8 80%);
-      background-color: #f2f2f2;
-      margin: 0;
-      padding: 50px 10px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
+      font-family: Arial, sans-serif;
     }
 
-    .container {
+    #chart {
       margin-top: 20px;
     }
 
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
+    rect {
+      stroke-width: 1px;
     }
 
-    .chart {
-      width: 1200px;
-      height: 900px; /* Increase the height to accommodate the treemap */
-      margin: 0 auto;
+    text {
+      font-size: 10px;
+    }
+
+    .popup {
+      position: absolute;
+      pointer-events: none;
+      background-color: white;
+      padding: 5px;
+      border: 1px solid gray;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link" href="index.html">Bar Chart</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="map.html">Map</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="scatter.html">Scatter Plot</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="radar.html">Radar Plot</a>
-        </li>
-        <li class="nav-item active">
-          <a class="nav-link" href="treemap.html">Treemap</a>
-        </li>
-      </ul>
-    </div>
-  </nav>
-  <div class="container">
-    <h1>Water Quality Dashboard</h1>
-    <div id="filter-container">
-      <label for="district-select">Select District:</label>
-      <select id="district-select">
-        <option value="all">All Districts</option>
-      </select>
-    </div>
-    <div id="chart-container">
-      <h2 id="chart-title"></h2>
-      <div id="chart"></div>
-    </div>
+  <h1>Uganda Water Quality Treemap</h1>
+  <div id="district-select">
+    <label for="district">Select District:</label>
+    <select id="district">
+      <option value="all">All Districts</option>
+    </select>
   </div>
+  <div id="chart"></div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/6.7.0/d3.min.js" integrity="sha512-OD7+6pk73K2fVSTe1ukF6F82g2rF84W/tZoCPhAdxUpznGdj06IkTRzCCP3GMB9SQDHD3P7Rz33eQVfIjGOSdg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script>
-    d3.csv("data.csv").then(function(data) {
-      console.log(data); // Check if the data is loaded correctly
+    const districtSelect = d3.select("#district");
 
-      // Data preprocessing
-      const nestedData = d3.group(data, d => d.District);
-      console.log(nestedData); // Check if the data is grouped correctly
+    d3.csv("water_quality.csv").then(function(data) {
+      // Get unique districts
+      const districts = Array.from(new Set(data.map(d => d.District)));
 
-      const districts = Array.from(nestedData.keys()); // Extract the district names
-
-      // Add district options to the select element
-      const districtSelect = d3.select("#district-select");
-      districtSelect.selectAll("option")
+      // Populate the district select dropdown
+      districtSelect
+        .selectAll("option")
         .data(districts)
         .enter()
         .append("option")
@@ -114,54 +78,50 @@
 
         const root = {
           name: "Uganda",
-          children: Array.from(d3.group(filteredData, d => d.District), ([district, values]) => ({
-            name: district,
-            children: Array.from(values, entry => ({
-              name: entry.Parameter,
-              village: entry.village,
-              ecoli: +entry.ecoli,
-              ph: +entry.pH,
-              conductivity: +entry["Electrical Conductivity"],
-              turbidity: +entry.turbidity
-            }))
-          }))
+          children: Array.from(new Set(filteredData.map(d => d.Parameter))).map(parameter => {
+            return {
+              name: parameter,
+              children: filteredData
+                .filter(d => d.Parameter === parameter)
+                .map(d => ({
+                  name: d.District,
+                  value: +d.Value
+                }))
+            };
+          })
         };
 
-        // Compute the treemap layout
-        const rootHierarchy = d3.hierarchy(root)
-          .sum(function(d) {
-            return d.ecoli + d.ph + d.conductivity + d.turbidity;
-          })
-          .sort(function(a, b) {
-            return b.value - a.value;
-          })
-          .each(function(d) {
-            d.name = d.data.name; // Assign district name to each node
-          });
+        const treemapData = d3.hierarchy(root)
+          .sum(d => d.value)
+          .sort((a, b) => b.value - a.value);
 
-        treemap(rootHierarchy);
+        // Generate the treemap layout
+        treemap(treemapData);
 
-        // Create the SVG container
+        // Remove previous chart elements
+        d3.select("#chart")
+          .selectAll("g")
+          .remove();
+
+        // Create the chart SVG and groups
         const svg = d3.select("#chart")
-          .selectAll("svg")
-          .data([null])
-          .join("svg")
-          .attr("viewBox", `0 0 ${width} ${height}`)
-          .attr("preserveAspectRatio", "xMidYMid meet")
+          .append("svg")
+          .attr("width", width)
+          .attr("height", height)
+          .style("font-size", "10px");
+
+        const chartGroup = svg.append("g")
+          .attr("transform", "translate(0, 20)");
+
+        const node = chartGroup.selectAll("g")
+          .data(treemapData.descendants())
+          .enter()
           .append("g")
-          .attr("transform", "translate(0,0)");
-
-        // Define an array of colors for districts
-        const districtColors = d3.scaleOrdinal(d3.schemeCategory10);
-
-        // Create the treemap nodes
-        const node = svg.selectAll("g")
-          .data(rootHierarchy.leaves())
-          .join("g")
           .attr("transform", function(d) {
             return "translate(" + d.x0 + "," + d.y0 + ")";
           });
 
+        // Create rectangles for each node
         node.append("rect")
           .attr("width", function(d) {
             return d.x1 - d.x0;
@@ -170,41 +130,22 @@
             return d.y1 - d.y0;
           })
           .attr("fill", function(d) {
-            const districtColor = districtColors(d.parent.data.name); // Assign a color based on district name
-            const gradientId = "gradient-" + d.parent.data.name.replace(/\s+/g, '-').toLowerCase(); // Generate a unique gradient id for each district
-            let gradient = d3.select(this).select("#" + gradientId);
-        
-            // If the gradient for the district doesn't exist, create it
-            if (gradient.empty()) {
-              const gradientData = [
-                { offset: "0%", color: "white" },
-                { offset: "100%", color: d3.color(districtColor).darker(0.8) }
-              ];
-        
-              // Create the gradient and color stops
-              gradient = d3.select(this).append("linearGradient")
-                .attr("id", gradientId)
-                .attr("gradientUnits", "userSpaceOnUse")
-                .attr("x1", 0)
-                .attr("y1", 0)
-                .attr("x2", 1)
-                .attr("y2", 1);
-        
-              gradient.selectAll("stop")
-                .data(gradientData)
-                .enter()
-                .append("stop")
-                .attr("offset", function(d) {
-                  return d.offset;
-                })
-                .attr("stop-color", function(d) {
-                  return d.color;
-                });
-            }
-        
-            return "url(#" + gradientId + ")"; // Apply the linear gradient
+            const districtName = d.data.name;
+            const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+            return colorScale(districtName);
           })
-          .attr("stroke", "white");
+          .attr("stroke", "white")
+          .on("mouseover", function(d) {
+            const popup = d3.select("#chart")
+              .append("div")
+              .attr("class", "popup")
+              .style("left", d3.event.pageX + "px")
+              .style("top", d3.event.pageY + "px")
+              .text(d.data.name + ": " + d.value);
+          })
+          .on("mouseout", function() {
+            d3.select(".popup").remove();
+          });
 
         node.append("text")
           .attr("clip-path", function(d, i) { return "url(#clip-" + i + ")"; })
