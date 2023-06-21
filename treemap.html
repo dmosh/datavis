@@ -219,12 +219,15 @@
         cells.on("mouseover", function(d) {
           const tooltip = d3.select("#tooltip");
           tooltip.style("opacity", 1);
-          tooltip.html("<strong>Village:</strong> " + d.data.village + "<br>" +
-            "<strong>District:</strong> " + d.parent.data.name + "<br>" +
-            "<strong>Parameter:</strong> " + d.data.name + "<br>" +
-            "<strong>Value:</strong> " + d.data.value)
-            .style("left", (d3.event.pageX + 10) + "px")
-            .style("top", (d3.event.pageY + 10) + "px");
+          tooltip.html(function() {
+            let tooltipContent = "<strong>District:</strong> " + d.parent.data.name + "<br>" +
+              "<strong>Parameter:</strong> " + d.data.name + "<br>" +
+              "<strong>Value:</strong> " + d.data.value;
+            if (d.data.village) {
+              tooltipContent = "<strong>Village:</strong> " + d.data.village + "<br>" + tooltipContent;
+            }
+            return tooltipContent;
+          })
         });
 
         // Hide tooltips on mouseout
