@@ -218,7 +218,7 @@
           .attr("clip-path", function(d, i) { return "url(#clip-" + i + ")"; })
           .selectAll("tspan")
           .data(function(d) {
-            return d.data.name.split(/(?=[A-Z][^A-Z])/g);
+            return (d.data.name || "").split(/(?=[A-Z][^A-Z])/g);
           })
           .join("tspan")
           .attr("x", 4)
