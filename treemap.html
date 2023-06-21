@@ -161,7 +161,7 @@
           .attr("transform", function(d) {
             return "translate(" + d.x0 + "," + d.y0 + ")";
           });
-
+        
         node.append("rect")
           .attr("width", function(d) {
             return d.x1 - d.x0;
@@ -170,7 +170,39 @@
             return d.y1 - d.y0;
           })
           .attr("fill", function(d) {
-            return districtColors(d.data.name); // Assign a color based on district name
+            const districtColor = districtColors(d.parent.data.name); // Assign a color based on district name
+            const gradientId = "gradient-" + d.parent.data.name.replace(/\s+/g, '-').toLowerCase(); // Generate a unique gradient id for each district
+            const gradient = node.select("#" + gradientId);
+        
+            // If the gradient for the district doesn't exist, create it
+            if (gradient.empty()) {
+              const gradientData = [
+                { offset: "0%", color: "white" },
+                { offset: "100%", color: d3.color(districtColor).darker(0.8) }
+              ];
+        
+              // Create the gradient and color stops
+              gradient = node.append("linearGradient")
+                .attr("id", gradientId)
+                .attr("gradientUnits", "userSpaceOnUse")
+                .attr("x1", 0)
+                .attr("y1", 0)
+                .attr("x2", 1)
+                .attr("y2", 1);
+        
+              gradient.selectAll("stop")
+                .data(gradientData)
+                .enter()
+                .append("stop")
+                .attr("offset", function(d) {
+                  return d.offset;
+                })
+                .attr("stop-color", function(d) {
+                  return d.color;
+                });
+            }
+        
+            return "url(#" + gradientId + ")"; // Apply the linear gradient
           })
           .attr("stroke", "white");
 
