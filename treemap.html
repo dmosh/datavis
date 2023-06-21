@@ -160,27 +160,6 @@
           .join("g")
           .attr("transform", function(d) {
             return "translate(" + d.x0 + "," + d.y0 + ")";
-          })
-          .on("click", function(d) {
-            // Show pop-up with details
-            const villageDetails = `
-              Village: ${d.data.village}<br>
-              E. coli: ${d.data.ecoli}<br>
-              pH: ${d.data.ph}<br>
-              Conductivity: ${d.data.conductivity}<br>
-              Turbidity: ${d.data.turbidity}
-            `;
-
-            // Position the pop-up
-            const popupX = d3.event.pageX + 10;
-            const popupY = d3.event.pageY - 10;
-
-            // Create and show the pop-up
-            d3.select("#popup")
-              .style("left", popupX + "px")
-              .style("top", popupY + "px")
-              .style("display", "block")
-              .html(villageDetails);
           });
 
         node.append("rect")
@@ -191,40 +170,74 @@
             return d.y1 - d.y0;
           })
           .attr("fill", function(d) {
-            return districtColors(d.parent.data.name);
-          });
+            const districtColor = districtColors(d.parent.data.name); // Assign a color based on district name
+            const gradientId = "gradient-" + d.parent.data.name.replace(/\s+/g, '-').toLowerCase(); // Generate a unique gradient id for each district
+            let gradient = d3.select(this).select("#" + gradientId);
+        
+            // If the gradient for the district doesn't exist, create it
+            if (gradient.empty()) {
+              const gradientData = [
+                { offset: "0%", color: "white" },
+                { offset: "100%", color: d3.color(districtColor).darker(0.8) }
+              ];
+        
+              // Create the gradient and color stops
+              gradient = d3.select(this).append("linearGradient")
+                .attr("id", gradientId)
+                .attr("gradientUnits", "userSpaceOnUse")
+                .attr("x1", 0)
+                .attr("y1", 0)
+                .attr("x2", 1)
+                .attr("y2", 1);
+        
+              gradient.selectAll("stop")
+                .data(gradientData)
+                .enter()
+                .append("stop")
+                .attr("offset", function(d) {
+                  return d.offset;
+                })
+                .attr("stop-color", function(d) {
+                  return d.color;
+                });
+            }
+        
+            return "url(#" + gradientId + ")"; // Apply the linear gradient
+          })
+          .attr("stroke", "white");
 
         node.append("text")
-          .attr("dx", 4)
-          .attr("dy", 14)
+          .attr("clip-path", function(d, i) { return "url(#clip-" + i + ")"; })
+          .selectAll("tspan")
+          .data(function(d) {
+            return (d.data.name || "").split(/(?=[A-Z][^A-Z])/g);
+          })
+          .join("tspan")
+          .attr("x", 4)
+          .attr("y", function(d, i) {
+            return 13 + i * 10;
+          })
           .text(function(d) {
-            return d.data.name;
+            return d;
           });
 
-        // Remove any existing pop-up
-        d3.select("#popup").remove();
-
-        // Create the pop-up container
-        d3.select("body")
-          .append("div")
-          .attr("id", "popup")
-          .style("position", "absolute")
-          .style("background-color", "#f9f9f9")
-          .style("border", "1px solid #ccc")
-          .style("padding", "10px")
-          .style("display", "none");
+        node.append("title")
+          .text(function(d) {
+            return d.data.name + "\nValue: " + d.value;
+          });
       }
 
-      // Initialize the treemap
-      updateTreemap("all");
-
-      // Update the treemap when the district is changed
-      districtSelect.on("change", function() {
-        const selectedDistrict = this.value;
+      // Function to handle the select change event
+      function handleSelectChange() {
+        const selectedDistrict = districtSelect.property("value");
         updateTreemap(selectedDistrict);
-      });
-    }).catch(function(error) {
-      console.log(error); // Log any error if it occurs
+      }
+
+      // Event listener for select change event
+      districtSelect.on("change", handleSelectChange);
+
+      // Initialize the treemap with all districts
+      updateTreemap("all");
     });
   </script>
 </body>
