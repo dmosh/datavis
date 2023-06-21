@@ -1,41 +1,89 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Water Quality Treemap</title>
+  <title>Treemap</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
-    /* Add CSS styles here */
-    .tooltip {
-      position: absolute;
-      background-color: white;
-      border: 1px solid gray;
-      border-radius: 5px;
-      padding: 10px;
-      pointer-events: none;
+    @import url(https://fonts.googleapis.com/css2?family=Comfortaa:wght@300);
+
+    body {
+      font-family: 'Comfortaa', cursive;
+      background: linear-gradient(130deg, #ccc 5%, #c8c8c8 80%);
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 50px 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .container {
+      margin-top: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .chart {
+      width: 1200px;
+      height: 900px; /* Increase the height to accommodate the treemap */
+      margin: 0 auto;
     }
   </style>
 </head>
 <body>
-  <h2>Water Quality Treemap</h2>
-  
-  <!-- Add the district filter -->
-  <label for="district-select">Select District:</label>
-  <select id="district-select"></select>
-  
-  <!-- Add the chart container -->
-  <div id="chart"></div>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="index.html">Bar Chart</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="map.html">Map</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="scatter.html">Scatter Plot</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="radar.html">Radar Plot</a>
+        </li>
+        <li class="nav-item active">
+          <a class="nav-link" href="treemap.html">Treemap</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="container">
+    <h1>Water Quality Dashboard</h1>
+    <div id="chart-container">
+      <h2 id="chart-title"></h2>
+      <div id="chart"></div>
+    </div>
+    <div id="filter-container">
+      <label for="district-select">Select District:</label>
+      <select id="district-select">
+        <option value="all">All Districts</option>
+      </select>
+    </div>
+  </div>
 
-  <script src="https://d3js.org/d3.v7.min.js"></script>
   <script>
-    // Add your JavaScript code here
     d3.csv("data.csv").then(function(data) {
-      // Data preprocessing and filtering
+      console.log(data); // Check if the data is loaded correctly
 
-      // Nest the data by district
+      // Data preprocessing
       const nestedData = d3.group(data, d => d.District);
+      console.log(nestedData); // Check if the data is grouped correctly
 
-      // Extract the district names
-      const districts = Array.from(nestedData.keys());
+      const districts = Array.from(nestedData.keys()); // Extract the district names
 
       // Add district options to the select element
       const districtSelect = d3.select("#district-select");
@@ -98,40 +146,18 @@
           .selectAll("svg")
           .data([null])
           .join("svg")
-          .attr("viewBox", [0, 0, width, height])
-          .style("font", "10px sans-serif");
+          .attr("viewBox", `0 0 ${width} ${height}`)
+          .attr("preserveAspectRatio", "xMidYMid meet")
+          .append("g")
+          .attr("transform", "translate(0,0)");
 
-        // Move the district filter above the chart
-        const districtFilter = d3.select("#district-select").node();
-        svg.node().parentNode.insertBefore(districtFilter, svg.node());
-
-        // Create the gradients for the treemap nodes
+        // Define an array of colors for districts
         const districtColors = d3.scaleOrdinal(d3.schemeCategory10);
-        const defs = svg.append("defs");
-
-        const gradient = defs.selectAll("linearGradient")
-          .data(rootHierarchy.descendants())
-          .enter()
-          .append("linearGradient")
-          .attr("id", function(d, i) {
-            return "gradient-" + i;
-          });
-
-        gradient.append("stop")
-          .attr("offset", "0%")
-          .attr("stop-color", "white");
-
-        gradient.append("stop")
-          .attr("offset", "100%")
-          .attr("stop-color", function(d) {
-            return districtColors(d.parent.data.name); // Assign a color based on district name
-          });
 
         // Create the treemap nodes
         const node = svg.selectAll("g")
-          .data(rootHierarchy.descendants())
-          .enter()
-          .append("g")
+          .data(rootHierarchy.leaves())
+          .join("g")
           .attr("transform", function(d) {
             return "translate(" + d.x0 + "," + d.y0 + ")";
           });
@@ -143,44 +169,79 @@
           .attr("height", function(d) {
             return d.y1 - d.y0;
           })
-          .attr("fill", function(d, i) {
-            return "url(#gradient-" + i + ")";
+          .attr("fill", function(d) {
+            return districtColors(d.parent.data.name); // Assign a color based on district name
           })
           .attr("stroke", "white");
 
-        // Add tooltips to the treemap nodes
-        const tooltip = d3.select("body")
-          .append("div")
-          .attr("class", "tooltip")
-          .style("opacity", 0);
+        // Define a linear gradient for the rectangle fill
+        const gradient = node.append("linearGradient")
+          .attr("id", function(d, i) { return "gradient-" + i; })
+          .attr("gradientUnits", "userSpaceOnUse")
+          .attr("x1", 0)
+          .attr("y1", 0)
+          .attr("x2", 1)
+          .attr("y2", 1);
+
+        gradient.append("stop")
+          .attr("offset", "0%")
+          .attr("stop-color", "white");
+
+        gradient.append("stop")
+          .attr("offset", "100%")
+          .attr("stop-color", function(d) {
+            return districtColors(d.parent.data.name).darker(0.8); // Make the color slightly darker
+          });
+
+        node.append("rect")
+          .attr("width", function(d) {
+            return d.x1 - d.x0;
+          })
+          .attr("height", function(d) {
+            return d.y1 - d.y0;
+          })
+          .attr("fill", function(d, i) {
+            return "url(#gradient-" + i + ")"; // Apply the linear gradient
+          })
+          .attr("stroke", "white");
+
+        node.append("clipPath")
+          .attr("id", function(d, i) { return "clip-" + i; })
+          .append("use")
+          .attr("xlink:href", function(d, i) { return "#clip-" + i; })
+          .attr("fill", "none");
+
+        node.append("text")
+          .attr("clip-path", function(d, i) { return "url(#clip-" + i + ")"; })
+          .selectAll("tspan")
+          .data(function(d) {
+            return d.data.name.split(/(?=[A-Z][^A-Z])/g);
+          })
+          .join("tspan")
+          .attr("x", 4)
+          .attr("y", function(d, i) {
+            return 13 + i * 10;
+          })
+          .text(function(d) {
+            return d;
+          });
 
         node.append("title")
           .text(function(d) {
-            return `${d.data.name}: ${d.data.village}\nE.coli: ${d.data.ecoli}\npH: ${d.data.ph}\nConductivity: ${d.data.conductivity}\nTurbidity: ${d.data.turbidity}`;
-          });
-
-        node.on("mouseover", function(d) {
-            tooltip.transition()
-              .duration(200)
-              .style("opacity", .9);
-            tooltip.html(`<b>${d.data.name}</b><br>${d.data.village}<br>E.coli: ${d.data.ecoli}<br>pH: ${d.data.ph}<br>Conductivity: ${d.data.conductivity}<br>Turbidity: ${d.data.turbidity}`)
-              .style("left", (d3.event.pageX + 10) + "px")
-              .style("top", (d3.event.pageY - 28) + "px");
-          })
-          .on("mouseout", function(d) {
-            tooltip.transition()
-              .duration(500)
-              .style("opacity", 0);
+            return d.data.name + "\nValue: " + d.value;
           });
       }
 
-      // Update the treemap when the selected district changes
-      districtSelect.on("change", function() {
-        const selectedDistrict = this.value;
+      // Function to handle the select change event
+      function handleSelectChange() {
+        const selectedDistrict = districtSelect.property("value");
         updateTreemap(selectedDistrict);
-      });
+      }
 
-      // Initialize the treemap
+      // Event listener for select change event
+      districtSelect.on("change", handleSelectChange);
+
+      // Initialize the treemap with all districts
       updateTreemap("all");
     });
   </script>
