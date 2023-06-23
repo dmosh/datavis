@@ -206,34 +206,38 @@
     }
 
     // Function to process the raw data
-    function processData(data, parameter, district) {
-      // Filter the data based on the selected district
-      var filteredData = data;
-      if (district !== "all") {
-        filteredData = data.filter(function(d) {
-          return d.District === district;
-        });
-      }
+function processData(data, parameter, district) {
+  // Filter the data based on the selected district
+  var filteredData = data;
+  if (district !== "all") {
+    filteredData = data.filter(function(d) {
+      return d.District === district;
+    });
+  }
 
-      // Process the filtered data here and return an array of objects with district, value, and color properties
-      return filteredData.map(function(d) {
-        return {
-          district: d.District.substring(0, 3), // Truncate label to the first 3 characters
-          value: +d[parameter]
-        };
-      });
-    }
+  // Get unique village names within the selected district
+  var villageOptions = Array.from(new Set(filteredData.map(d => d.Village)));
 
-    // Function to get the chart title based on the parameter and district
-    function getChartTitle(parameter, district) {
-      var title = "";
-      if (district === "all") {
-        title += parameter + " Concentration by District";
-      } else {
-        title += parameter + " Concentration in " + district;
-      }
-      return title;
+  // Process the filtered data here and return an array of objects with district, value, and color properties
+  return villageOptions.map(function(village) {
+    // Get the data for the current village
+    var villageData = filteredData.filter(function(d) {
+      return d.Village === village;
+    });
+
+    // Calculate the average value for the current village
+    var totalValue = 0;
+    for (var i = 0; i < villageData.length; i++) {
+      totalValue += +villageData[i][parameter];
     }
+    var averageValue = totalValue / villageData.length;
+
+    return {
+      district: village, // Use village name as the label
+      value: averageValue
+    };
+  });
+}
   </script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
