@@ -159,7 +159,7 @@
           mapTitle = L.control({ position: 'topright' });
           mapTitle.onAdd = function (map) {
             var div = L.DomUtil.create('div', 'map-title');
-            div.innerHTML = '<h3>' + title + ' Quantity per Water Source</h3>';
+            div.innerHTML = '<h5>' + title + ' Quantity per Water Source</h5>';
             return div;
           };
           mapTitle.addTo(map);
