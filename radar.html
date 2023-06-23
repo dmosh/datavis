@@ -50,6 +50,29 @@
       height: 600px;
       margin: 0 auto;
     }
+    .legend-container {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.legend-color {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+}
+
+.legend-text {
+  font-size: 12px;
+}
+
   </style>
 </head>
 <body>
@@ -98,6 +121,7 @@
     <div id="chart-container">
       <h2 id="chart-title"></h2>
       <div id="radar-chart" class="chart"></div>
+      <div id="legend-container"></div>
     </div>
   </div>
 
@@ -191,6 +215,12 @@ function updateChart() {
           hover: {
             size: 6 // Adjust the size of the markers on hover
           }
+        },
+        // Add a custom legend formatter
+        legend: {
+          formatter: function (seriesName, opts) {
+            return seriesName + ": " + chartData.series[opts.seriesIndex].data[0];
+          }
         }
       }
     }
@@ -207,6 +237,9 @@ function updateChart() {
 
   // Add data point labels
   addDataPointLabels();
+
+  // Render the legend
+  renderLegend();
 
   // Update chart title
   var chartTitle = getChartTitle(parameter, district);
@@ -280,6 +313,22 @@ function addDataPointLabels() {
       // Append the label to the chart
       document.querySelector("#radar-chart .apexcharts-inner").appendChild(label);
     });
+  });
+}
+    // Function to render the legend
+function renderLegend() {
+  var legendContainer = document.querySelector("#legend-container");
+  legendContainer.innerHTML = ""; // Clear the container
+
+  // Iterate over each series (parameter) to create legend items
+  chartData.series.forEach(function (seriesData, seriesIndex) {
+    var legendItem = document.createElement("div");
+    legendItem.innerHTML = "<span class='legend-color' style='background-color:" +
+      chartOptions.plotOptions.radar.polygons.fill.colors[seriesIndex] +
+      "'></span>" +
+      "<span class='legend-text'>" + seriesData.name + "</span>";
+
+    legendContainer.appendChild(legendItem);
   });
 }
 
