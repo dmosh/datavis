@@ -133,110 +133,76 @@
     }
 
     // Function to update the chart based on the selected parameter and district
-    function updateChart() {
-      var parameter = d3.select("#parameter-select").node().value;
-      var district = d3.select("#district-select").node().value;
-      currentParameter = parameter;
-      currentDistrict = district;
+function updateChart() {
+var parameter = d3.select("#parameter-select").node().value;
+var district = d3.select("#district-select").node().value;
+currentParameter = parameter;
+currentDistrict = district;
 
-      // Process the data
-      var processedData = processData(data, parameter, district);
+// Process the data
+var processedData = processData(data, parameter, district);
 
-      // Prepare data for radar chart
-      var chartData = {
-        series: [
-          {
-            name: parameter,
-            data: processedData.map(function(d) { return d.value; })
-          }
-        ],
-        labels: processedData.map(function(d) { return d.district; })
-      };
+// Prepare data for radar chart
+var chartData = {
+series: [
+{
+name: parameter,
+data: processedData.map(function(d) { return d.value; })
+}
+],
+labels: processedData.map(function(d) { return d.village; }) // Change this line
+};
 
-      // Set up chart options
-      var chartOptions = {
-        chart: {
-          type: 'radar',
-          height: 600
-        },
-        series: chartData.series,
-        labels: chartData.labels,
-        dataLabels: {
-          enabled: true,
-          style: {
-            fill: '#000000',
-            fontSize: '12px',
-            fontFamily: 'Comfortaa, cursive',
-            transform: 'rotate(-90deg)', // Rotate labels by -45 degrees
-            textAnchor: 'end' // Align rotated labels to the end
-          }
-        },
-        plotOptions: {
-          radar: {
-            dataLabels: {
-              offsetY: 5,
-              formatter: function(value, { seriesIndex, dataPointIndex }) {
-                if (value === Math.max(...chartData.series[seriesIndex].data))
-                  return value;
-                return '';
-              }
-            },
-            polygons: {
-              fill: {
-                colors: ['#AA4A44', '#2979FF', '#00C9A7', '#FFD60A'] // Specify different colors for each parameter
-              }
-            }
-          }
-        }
-      };
+// Set up chart options
+var chartOptions = {
+chart: {
+type: 'radar',
+height: 600
+},
+series: chartData.series,
+labels: chartData.labels,
+dataLabels: {
+enabled: true,
+style: {
+fill: '#000000',
+fontSize: '12px',
+fontFamily: 'Comfortaa, cursive',
+transform: 'rotate(-90deg)', // Rotate labels by -45 degrees
+textAnchor: 'end' // Align rotated labels to the end
+}
+},
+plotOptions: {
+radar: {
+dataLabels: {
+offsetY: 5,
+formatter: function(value, { seriesIndex, dataPointIndex }) {
+if (value === Math.max(...chartData.series[seriesIndex].data))
+return value;
+return '';
+}
+},
+polygons: {
+fill: {
+colors: ['#AA4A44', '#2979FF', '#00C9A7', '#FFD60A'] // Specify different colors for each parameter
+}
+}
+}
+}
+};
 
-      // Remove existing chart
-      if (window.chart) {
-        window.chart.destroy();
-      }
+// Remove existing chart
+if (window.chart) {
+window.chart.destroy();
+}
 
-      // Create radar chart
-      window.chart = new ApexCharts(document.querySelector("#radar-chart"), chartOptions);
-      window.chart.render();
+// Create radar chart
+window.chart = new ApexCharts(document.querySelector("#radar-chart"), chartOptions);
+window.chart.render();
 
-      // Update chart title
-      var chartTitle = getChartTitle(parameter, district);
-      d3.select("#chart-title")
-        .text(chartTitle);
-    }
-
-    // Function to process the raw data
-function processData(data, parameter, district) {
-  // Filter the data based on the selected district
-  var filteredData = data;
-  if (district !== "all") {
-    filteredData = data.filter(function(d) {
-      return d.District === district;
-    });
-  }
-
-  // Get unique village names within the selected district
-  var villageOptions = Array.from(new Set(filteredData.map(d => d.Village)));
-
-  // Process the filtered data here and return an array of objects with district, value, and color properties
-  return villageOptions.map(function(village) {
-    // Get the data for the current village
-    var villageData = filteredData.filter(function(d) {
-      return d.Village === village;
-    });
-
-    // Calculate the average value for the current village
-    var totalValue = 0;
-    for (var i = 0; i < villageData.length; i++) {
-      totalValue += +villageData[i][parameter];
-    }
-    var averageValue = totalValue / villageData.length;
-
-    return {
-      district: village, // Use village name as the label
-      value: averageValue
-    };
-  });
+// Update chart title
+var chartTitle = getChartTitle(parameter, district);
+d3.select("#chart-title")
+.text(chartTitle);
 }
   </script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
