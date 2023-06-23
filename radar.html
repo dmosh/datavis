@@ -120,10 +120,10 @@
     function populateDistrictOptions(data) {
       var districtOptions = Array.from(new Set(data.map(d => d.District)));
       var select = d3.select("#district-select");
-    
+
       // Log the array of districts to the console
       console.log("Districts:", districtOptions);
-    
+
       select.selectAll("option")
         .data(districtOptions)
         .enter()
@@ -155,7 +155,7 @@
 
       // Set up chart options
       var chartOptions = {
-       chart: {
+        chart: {
           type: 'radar',
           height: 600
         },
@@ -183,7 +183,7 @@
             },
             polygons: {
               fill: {
-                colors: ['#AA4A44', '#2979ff']
+                colors: ['#AA4A44', '#2979FF', '#00C9A7', '#FFD60A'] // Specify different colors for each parameter
               }
             }
           }
@@ -230,7 +230,7 @@
       if (district === "all") {
         title += parameter + " Concentration by District";
       } else {
-        title += parameter+ " Concentration in " + district;
+        title += parameter + " Concentration in " + district;
       }
       return title;
     }
